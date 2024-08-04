@@ -1,0 +1,18 @@
+2024-08-03 20:02:51 Warn: [DEBUG:] 1 / options: { debug: true }
+2024-08-03 20:02:51 Warn: [DEBUG:] 1 / args: [ "1" ]
+2024-08-03 20:12:05 Warn: [DEBUG:] 1 / options: { debug: true, crf: 5, overwrite: false }
+2024-08-03 20:12:05 Warn: [DEBUG:] 1 / args: [ "1" ]
+2024-08-03 20:12:05 Warn: [DEBUG:] 1 / basePath: /home/acidtib/code/clipper/results/1
+2024-08-03 20:12:05 Warn: [DEBUG:] 1 / checkVideo: { ok: true, versionstamp: "00000000000000050000" }
+2024-08-03 20:13:55 Warn: [DEBUG:] 1 / options: { debug: true, crf: 5, overwrite: false }
+2024-08-03 20:13:55 Warn: [DEBUG:] 1 / args: [ "1" ]
+2024-08-03 20:13:55 Warn: [DEBUG:] 1 / basePath: /home/acidtib/code/clipper/results/1
+2024-08-03 20:13:55 Warn: [DEBUG:] 1 / checkVideo: { ok: false }
+2024-08-03 20:14:09 Warn: [DEBUG:] 1 / options: { debug: true, overwrite: true, crf: 5 }
+2024-08-03 20:14:09 Warn: [DEBUG:] 1 / args: [ "1" ]
+2024-08-03 20:14:09 Warn: [DEBUG:] 1 / basePath: /home/acidtib/code/clipper/results/1
+2024-08-03 20:14:09 Warn: [DEBUG:] 1 / checkVideo: { ok: false }
+2024-08-03 20:39:48 Warn: [DEBUG:] 1 / options: { debug: true }
+2024-08-03 20:39:48 Warn: [DEBUG:] 1 / args: [ "1" ]
+2024-08-03 20:41:20 Warn: [DEBUG:] 1 / options: { debug: true }
+2024-08-03 20:41:20 Warn: [DEBUG:] 1 / args: [ "1" ]
