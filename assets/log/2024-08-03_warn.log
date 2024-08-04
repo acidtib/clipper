@@ -16,3 +16,137 @@
 2024-08-03 20:39:48 Warn: [DEBUG:] 1 / args: [ "1" ]
 2024-08-03 20:41:20 Warn: [DEBUG:] 1 / options: { debug: true }
 2024-08-03 20:41:20 Warn: [DEBUG:] 1 / args: [ "1" ]
+2024-08-03 21:52:49 Warn: [DEBUG:] 1 / options: { debug: true, overwrite: false }
+2024-08-03 21:52:49 Warn: [DEBUG:] 1 / args: [ "1" ]
+2024-08-03 21:52:49 Warn: [DEBUG:] 1 / basePath: /home/acidtib/code/clipper/results/1
+2024-08-03 21:57:02 Warn: [DEBUG:] 1 / options: { debug: true, overwrite: false }
+2024-08-03 21:57:02 Warn: [DEBUG:] 1 / args: [ "1" ]
+2024-08-03 21:57:02 Warn: [DEBUG:] 1 / basePath: /home/acidtib/code/clipper/results/1
+2024-08-03 21:58:15 Warn: [DEBUG:] 1 / options: { debug: true, overwrite: false }
+2024-08-03 21:58:15 Warn: [DEBUG:] 1 / args: [ "1" ]
+2024-08-03 21:58:15 Warn: [DEBUG:] 1 / basePath: /home/acidtib/code/clipper/results/1
+2024-08-03 21:58:29 Warn: [DEBUG:] 1 / options: { debug: true, overwrite: false }
+2024-08-03 21:58:29 Warn: [DEBUG:] 1 / args: [ "1" ]
+2024-08-03 21:58:29 Warn: [DEBUG:] 1 / basePath: /home/acidtib/code/clipper/results/1
+2024-08-03 22:01:14 Warn: [DEBUG:] 1 / options: { debug: true, overwrite: false }
+2024-08-03 22:01:14 Warn: [DEBUG:] 1 / args: [ "1" ]
+2024-08-03 22:01:14 Warn: [DEBUG:] 1 / basePath: /home/acidtib/code/clipper/results/1
+2024-08-03 22:01:33 Warn: [DEBUG:] 1 / options: { debug: true, overwrite: false }
+2024-08-03 22:01:33 Warn: [DEBUG:] 1 / args: [ "1" ]
+2024-08-03 22:01:33 Warn: [DEBUG:] 1 / basePath: /home/acidtib/code/clipper/results/1
+2024-08-03 22:19:51 Warn: [DEBUG:] 1 / options: { debug: true, overwrite: false }
+2024-08-03 22:19:51 Warn: [DEBUG:] 1 / args: [ "1" ]
+2024-08-03 22:19:51 Warn: [DEBUG:] 1 / basePath: /home/acidtib/code/clipper/results/1
+2024-08-03 22:25:15 Warn: [DEBUG:] 1 / options: { debug: true, overwrite: false }
+2024-08-03 22:25:15 Warn: [DEBUG:] 1 / args: [ "1" ]
+2024-08-03 22:25:15 Warn: [DEBUG:] 1 / basePath: /home/acidtib/code/clipper/results/1
+2024-08-03 22:30:12 Warn: [DEBUG:] 1 / options: { debug: true, overwrite: false }
+2024-08-03 22:30:12 Warn: [DEBUG:] 1 / args: [ "1" ]
+2024-08-03 22:30:12 Warn: [DEBUG:] 1 / basePath: /home/acidtib/code/clipper/results/1/clips
+2024-08-03 22:31:49 Warn: [DEBUG:] 1 / options: { debug: true, overwrite: false }
+2024-08-03 22:31:49 Warn: [DEBUG:] 1 / basePath: /home/acidtib/code/clipper/results/1/clips
+2024-08-03 22:31:49 Warn: [DEBUG:] 1 / args: [ "1" ]
+2024-08-03 22:32:16 Warn: [DEBUG:] 1 / options: { debug: true, overwrite: false }
+2024-08-03 22:32:16 Warn: [DEBUG:] 1 / args: [ "1" ]
+2024-08-03 22:32:16 Warn: [DEBUG:] 1 / basePath: /home/acidtib/code/clipper/results/1/clips
+2024-08-03 22:32:19 Warn: [DEBUG:] https://www.twitch.tv/sonnekonig85/clip/AverageSneakyAmazonFloof-tNl-n8wY1CHkNfKy 
+2024-08-03 22:32:19 Warn: [DEBUG:] https://www.twitch.tv/hornetlul/clip/FlirtyBlithePotSoBayed-DRNq8JAihgpRESwh 
+2024-08-03 22:32:47 Warn: [DEBUG:] 1 / options: { debug: true, overwrite: false }
+2024-08-03 22:32:47 Warn: [DEBUG:] 1 / basePath: /home/acidtib/code/clipper/results/1/clips
+2024-08-03 22:32:47 Warn: [DEBUG:] 1 / args: [ "1" ]
+2024-08-03 22:32:51 Warn: [DEBUG:] https://www.twitch.tv/sonnekonig85/clip/AverageSneakyAmazonFloof-tNl-n8wY1CHkNfKy 
+2024-08-03 22:32:51 Warn: [DEBUG:] https://www.twitch.tv/hornetlul/clip/FlirtyBlithePotSoBayed-DRNq8JAihgpRESwh 
+2024-08-03 22:33:05 Warn: [DEBUG:] 1 / options: { debug: true, overwrite: false }
+2024-08-03 22:33:05 Warn: [DEBUG:] 1 / args: [ "1" ]
+2024-08-03 22:33:05 Warn: [DEBUG:] 1 / basePath: /home/acidtib/code/clipper/results/1/clips
+2024-08-03 22:33:07 Warn: [DEBUG:] https://www.twitch.tv/sonnekonig85/clip/AverageSneakyAmazonFloof-tNl-n8wY1CHkNfKy 
+2024-08-03 22:33:07 Warn: [DEBUG:] https://www.twitch.tv/hornetlul/clip/FlirtyBlithePotSoBayed-DRNq8JAihgpRESwh 
+2024-08-03 22:34:09 Warn: [DEBUG:] 1 / options: { debug: true, overwrite: false }
+2024-08-03 22:34:09 Warn: [DEBUG:] 1 / args: [ "1" ]
+2024-08-03 22:34:09 Warn: [DEBUG:] 1 / basePath: /home/acidtib/code/clipper/results/1/clips
+2024-08-03 22:34:11 Warn: [DEBUG:] https://www.twitch.tv/hornetlul/clip/FlirtyBlithePotSoBayed-DRNq8JAihgpRESwh 
+2024-08-03 22:35:00 Warn: [DEBUG:] 1 / options: { debug: true, overwrite: false }
+2024-08-03 22:35:00 Warn: [DEBUG:] 1 / args: [ "1" ]
+2024-08-03 22:35:00 Warn: [DEBUG:] 1 / basePath: /home/acidtib/code/clipper/results/1/clips
+2024-08-03 22:35:02 Warn: [DEBUG:] https://www.twitch.tv/hornetlul/clip/FlirtyBlithePotSoBayed-DRNq8JAihgpRESwh 
+2024-08-03 22:35:21 Warn: [DEBUG:] 1 / options: { debug: true, overwrite: false }
+2024-08-03 22:35:21 Warn: [DEBUG:] 1 / args: [ "1" ]
+2024-08-03 22:35:21 Warn: [DEBUG:] 1 / basePath: /home/acidtib/code/clipper/results/1/clips
+2024-08-03 22:35:23 Warn: [DEBUG:] https://www.twitch.tv/hornetlul/clip/FlirtyBlithePotSoBayed-DRNq8JAihgpRESwh 
+2024-08-03 22:35:33 Warn: [DEBUG:] 1 / options: { debug: true, overwrite: false }
+2024-08-03 22:35:33 Warn: [DEBUG:] 1 / args: [ "1" ]
+2024-08-03 22:35:33 Warn: [DEBUG:] 1 / basePath: /home/acidtib/code/clipper/results/1/clips
+2024-08-03 22:35:35 Warn: [DEBUG:] https://www.twitch.tv/hornetlul/clip/FlirtyBlithePotSoBayed-DRNq8JAihgpRESwh [twitch:clips] Extracting URL: https://www.twitch.tv/hornetlul/clip/FlirtyBlithePotSoBayed-DRNq8JAihgpRESwh
+[twitch:clips] FlirtyBlithePotSoBayed-DRNq8JAihgpRESwh: Downloading clip access token GraphQL
+[twitch:clips] FlirtyBlithePotSoBayed-DRNq8JAihgpRESwh: Downloading clip GraphQL
+[info] 3126084806: Downloading 1 format(s): 936
+[download] /home/acidtib/code/clipper/results/1/clips/hornetlul_FlirtyBlithePotSoBayed-DRNq8JAihgpRESwh.mp4 has already been downloaded
+[download] 100% of   17.67MiB
+
+2024-08-03 22:35:51 Warn: [DEBUG:] 1 / options: { debug: true, overwrite: false }
+2024-08-03 22:35:51 Warn: [DEBUG:] 1 / args: [ "1" ]
+2024-08-03 22:35:51 Warn: [DEBUG:] 1 / basePath: /home/acidtib/code/clipper/results/1/clips
+2024-08-03 22:35:54 Warn: [DEBUG:] https://www.twitch.tv/hornetlul/clip/FlirtyBlithePotSoBayed-DRNq8JAihgpRESwh [twitch:clips] Extracting URL: https://www.twitch.tv/hornetlul/clip/FlirtyBlithePotSoBayed-DRNq8JAihgpRESwh
+[twitch:clips] FlirtyBlithePotSoBayed-DRNq8JAihgpRESwh: Downloading clip access token GraphQL
+[twitch:clips] FlirtyBlithePotSoBayed-DRNq8JAihgpRESwh: Downloading clip GraphQL
+[info] 3126084806: Downloading 1 format(s): 936
+[download] Destination: /home/acidtib/code/clipper/results/1/clips/hornetlul_FlirtyBlithePotSoBayed-DRNq8JAihgpRESwh.mp4
+[download]   0.0% of   17.67MiB at   51.15KiB/s ETA 05:53[download]   0.0% of   17.67MiB at  148.17KiB/s ETA 02:02[download]   0.0% of   17.67MiB at  339.26KiB/s ETA 00:53[download]   0.1% of   17.67MiB at  713.95KiB/s ETA 00:25[download]   0.2% of   17.67MiB at    1.41MiB/s ETA 00:12[download]   0.3% of   17.67MiB at  956.75KiB/s ETA 00:18[download]   0.7% of   17.67MiB at    1.54MiB/s ETA 00:11[download]   1.4% of   17.67MiB at    2.54MiB/s ETA 00:06[download]   2.8% of   17.67MiB at    4.33MiB/s ETA 00:03[download]   5.7% of   17.67MiB at    7.17MiB/s ETA 00:02[download]  11.3% of   17.67MiB at   11.29MiB/s ETA 00:01[download]  22.6% of   17.67MiB at   15.44MiB/s ETA 00:00[download]  45.3% of   17.67MiB at   21.11MiB/s ETA 00:00[download]  67.9% of   17.67MiB at   21.92MiB/s ETA 00:00[download]  90.6% of   17.67MiB at   24.26MiB/s ETA 00:00[download] 100.0% of   17.67MiB at   24.86MiB/s ETA 00:00[download] 100% of   17.67MiB in 00:00:00 at 19.72MiB/s  
+
+2024-08-03 22:36:10 Warn: [DEBUG:] 1 / options: { debug: true, overwrite: false }
+2024-08-03 22:36:10 Warn: [DEBUG:] 1 / args: [ "1" ]
+2024-08-03 22:36:10 Warn: [DEBUG:] 1 / basePath: /home/acidtib/code/clipper/results/1/clips
+2024-08-03 22:36:14 Warn: [DEBUG:] https://www.twitch.tv/sonnekonig85/clip/AverageSneakyAmazonFloof-tNl-n8wY1CHkNfKy [twitch:clips] Extracting URL: https://www.twitch.tv/sonnekonig85/clip/AverageSneakyAmazonFloof-tNl-n8wY1CHkNfKy
+[twitch:clips] AverageSneakyAmazonFloof-tNl-n8wY1CHkNfKy: Downloading clip access token GraphQL
+[twitch:clips] AverageSneakyAmazonFloof-tNl-n8wY1CHkNfKy: Downloading clip GraphQL
+[info] 1271508314: Downloading 1 format(s): 1080
+[download] Destination: /home/acidtib/code/clipper/results/1/clips/sonnekonig85_AverageSneakyAmazonFloof-tNl-n8wY1CHkNfKy.mp4
+[download]   0.0% of   13.28MiB at  Unknown B/s ETA Unknown[download]   0.0% of   13.28MiB at    1.06MiB/s ETA 00:12  [download]   0.1% of   13.28MiB at    1.69MiB/s ETA 00:07[download]   0.1% of   13.28MiB at    2.72MiB/s ETA 00:04[download]   0.2% of   13.28MiB at    4.46MiB/s ETA 00:02[download]   0.5% of   13.28MiB at    2.96MiB/s ETA 00:04[download]   0.9% of   13.28MiB at    2.97MiB/s ETA 00:04[download]   1.9% of   13.28MiB at    3.65MiB/s ETA 00:03[download]   3.8% of   13.28MiB at    5.49MiB/s ETA 00:02[download]   7.5% of   13.28MiB at    7.51MiB/s ETA 00:01[download]  15.1% of   13.28MiB at    9.34MiB/s ETA 00:01[download]  30.1% of   13.28MiB at   11.99MiB/s ETA 00:00[download]  60.2% of   13.28MiB at   13.53MiB/s ETA 00:00[download]  90.4% of   13.28MiB at   14.77MiB/s ETA 00:00[download] 100.0% of   13.28MiB at   15.08MiB/s ETA 00:00[download] 100% of   13.28MiB in 00:00:01 at 12.33MiB/s  
+
+2024-08-03 22:36:15 Warn: [DEBUG:] https://www.twitch.tv/hornetlul/clip/FlirtyBlithePotSoBayed-DRNq8JAihgpRESwh [twitch:clips] Extracting URL: https://www.twitch.tv/hornetlul/clip/FlirtyBlithePotSoBayed-DRNq8JAihgpRESwh
+[twitch:clips] FlirtyBlithePotSoBayed-DRNq8JAihgpRESwh: Downloading clip access token GraphQL
+[twitch:clips] FlirtyBlithePotSoBayed-DRNq8JAihgpRESwh: Downloading clip GraphQL
+[info] 3126084806: Downloading 1 format(s): 936
+[download] Destination: /home/acidtib/code/clipper/results/1/clips/hornetlul_FlirtyBlithePotSoBayed-DRNq8JAihgpRESwh.mp4
+[download]   0.0% of   17.67MiB at  Unknown B/s ETA Unknown[download]   0.0% of   17.67MiB at    1.11MiB/s ETA 00:16  [download]   0.0% of   17.67MiB at    1.72MiB/s ETA 00:10[download]   0.1% of   17.67MiB at    2.77MiB/s ETA 00:06[download]   0.2% of   17.67MiB at    4.55MiB/s ETA 00:03[download]   0.3% of   17.67MiB at    2.88MiB/s ETA 00:06[download]   0.7% of   17.67MiB at    2.52MiB/s ETA 00:06[download]   1.4% of   17.67MiB at    3.65MiB/s ETA 00:04[download]   2.8% of   17.67MiB at    4.93MiB/s ETA 00:03[download]   5.7% of   17.67MiB at    7.31MiB/s ETA 00:02[download]  11.3% of   17.67MiB at    9.46MiB/s ETA 00:01[download]  22.6% of   17.67MiB at   10.53MiB/s ETA 00:01[download]  45.3% of   17.67MiB at   12.93MiB/s ETA 00:00[download]  67.9% of   17.67MiB at   14.10MiB/s ETA 00:00[download]  90.6% of   17.67MiB at   15.60MiB/s ETA 00:00[download] 100.0% of   17.67MiB at   15.80MiB/s ETA 00:00[download] 100% of   17.67MiB in 00:00:01 at 13.33MiB/s  
+
+2024-08-03 22:36:35 Warn: [DEBUG:] 1 / options: { debug: true, overwrite: false }
+2024-08-03 22:36:35 Warn: [DEBUG:] 1 / args: [ "1" ]
+2024-08-03 22:36:35 Warn: [DEBUG:] 1 / basePath: /home/acidtib/code/clipper/results/1/clips
+2024-08-03 22:36:38 Warn: [DEBUG:] https://www.twitch.tv/sonnekonig85/clip/AverageSneakyAmazonFloof-tNl-n8wY1CHkNfKy [twitch:clips] Extracting URL: https://www.twitch.tv/sonnekonig85/clip/AverageSneakyAmazonFloof-tNl-n8wY1CHkNfKy
+[twitch:clips] AverageSneakyAmazonFloof-tNl-n8wY1CHkNfKy: Downloading clip access token GraphQL
+[twitch:clips] AverageSneakyAmazonFloof-tNl-n8wY1CHkNfKy: Downloading clip GraphQL
+[info] 1271508314: Downloading 1 format(s): 1080
+[download] Destination: /home/acidtib/code/clipper/results/1/clips/sonnekonig85_AverageSneakyAmazonFloof-tNl-n8wY1CHkNfKy.mp4
+[download]   0.0% of   13.28MiB at   52.80KiB/s ETA 04:17[download]   0.0% of   13.28MiB at  141.97KiB/s ETA 01:35[download]   0.1% of   13.28MiB at  310.07KiB/s ETA 00:43[download]   0.1% of   13.28MiB at  630.61KiB/s ETA 00:21[download]   0.2% of   13.28MiB at    1.21MiB/s ETA 00:10[download]   0.5% of   13.28MiB at    2.17MiB/s ETA 00:06[download]   0.9% of   13.28MiB at    2.58MiB/s ETA 00:05[download]   1.9% of   13.28MiB at    3.92MiB/s ETA 00:03[download]   3.8% of   13.28MiB at    5.61MiB/s ETA 00:02[download]   7.5% of   13.28MiB at    8.14MiB/s ETA 00:01[download]  15.1% of   13.28MiB at   11.23MiB/s ETA 00:01[download]  30.1% of   13.28MiB at   11.95MiB/s ETA 00:00[download]  60.2% of   13.28MiB at   13.15MiB/s ETA 00:00[download]  90.4% of   13.28MiB at   14.48MiB/s ETA 00:00[download] 100.0% of   13.28MiB at   15.05MiB/s ETA 00:00[download] 100% of   13.28MiB in 00:00:01 at 12.07MiB/s  
+
+2024-08-03 22:36:39 Warn: [DEBUG:] https://www.twitch.tv/hornetlul/clip/FlirtyBlithePotSoBayed-DRNq8JAihgpRESwh [twitch:clips] Extracting URL: https://www.twitch.tv/hornetlul/clip/FlirtyBlithePotSoBayed-DRNq8JAihgpRESwh
+[twitch:clips] FlirtyBlithePotSoBayed-DRNq8JAihgpRESwh: Downloading clip access token GraphQL
+[twitch:clips] FlirtyBlithePotSoBayed-DRNq8JAihgpRESwh: Downloading clip GraphQL
+[info] 3126084806: Downloading 1 format(s): 936
+[download] Destination: /home/acidtib/code/clipper/results/1/clips/hornetlul_FlirtyBlithePotSoBayed-DRNq8JAihgpRESwh.mp4
+[download]   0.0% of   17.67MiB at  Unknown B/s ETA Unknown[download]   0.0% of   17.67MiB at    1.20MiB/s ETA 00:14  [download]   0.0% of   17.67MiB at    1.88MiB/s ETA 00:09[download]   0.1% of   17.67MiB at    3.04MiB/s ETA 00:05[download]   0.2% of   17.67MiB at 1011.68KiB/s ETA 00:17[download]   0.3% of   17.67MiB at    1.91MiB/s ETA 00:09[download]   0.7% of   17.67MiB at    2.45MiB/s ETA 00:07[download]   1.4% of   17.67MiB at    2.91MiB/s ETA 00:05[download]   2.8% of   17.67MiB at    3.69MiB/s ETA 00:04[download]   5.7% of   17.67MiB at    4.14MiB/s ETA 00:04[download]  11.3% of   17.67MiB at    5.30MiB/s ETA 00:02[download]  22.6% of   17.67MiB at    6.03MiB/s ETA 00:02[download]  45.3% of   17.67MiB at    7.03MiB/s ETA 00:01[download]  67.9% of   17.67MiB at    7.98MiB/s ETA 00:00[download]  90.6% of   17.67MiB at    8.86MiB/s ETA 00:00[download] 100.0% of   17.67MiB at    9.28MiB/s ETA 00:00[download] 100% of   17.67MiB in 00:00:02 at 8.22MiB/s   
+
+2024-08-03 22:37:50 Warn: [DEBUG:] 1 / options: { debug: true, overwrite: false }
+2024-08-03 22:37:50 Warn: [DEBUG:] 1 / args: [ "1" ]
+2024-08-03 22:37:50 Warn: [DEBUG:] 1 / basePath: /home/acidtib/code/clipper/results/1/clips
+2024-08-03 22:37:54 Warn: [DEBUG:] https://www.twitch.tv/hornetlul/clip/FlirtyBlithePotSoBayed-DRNq8JAihgpRESwh 
+2024-08-03 22:37:54 Warn: [DEBUG:] https://www.twitch.tv/sonnekonig85/clip/AverageSneakyAmazonFloof-tNl-n8wY1CHkNfKy 
+2024-08-03 22:38:44 Warn: [DEBUG:] 1 / options: { debug: true, overwrite: false }
+2024-08-03 22:38:44 Warn: [DEBUG:] 1 / args: [ "1" ]
+2024-08-03 22:38:44 Warn: [DEBUG:] 1 / basePath: /home/acidtib/code/clipper/results/1/clips
+2024-08-03 22:38:46 Warn: [DEBUG:] https://www.twitch.tv/sonnekonig85/clip/AverageSneakyAmazonFloof-tNl-n8wY1CHkNfKy 
+2024-08-03 22:39:16 Warn: [DEBUG:] 1 / args: [ "1" ]
+2024-08-03 22:39:16 Warn: [DEBUG:] 1 / options: { debug: true, overwrite: false }
+2024-08-03 22:39:16 Warn: [DEBUG:] 1 / basePath: /home/acidtib/code/clipper/results/1/clips
+2024-08-03 22:39:18 Warn: [DEBUG:] https://www.twitch.tv/hornetlul/clip/FlirtyBlithePotSoBayed-DRNq8JAihgpRESwh 
+2024-08-03 22:41:28 Warn: [DEBUG:] 1 / args: [ "1" ]
+2024-08-03 22:41:28 Warn: [DEBUG:] 1 / basePath: /home/acidtib/code/clipper/results/1/clips
+2024-08-03 22:41:28 Warn: [DEBUG:] 1 / options: { debug: true, overwrite: false }
+2024-08-03 22:41:31 Warn: [DEBUG:] https://www.twitch.tv/sonnekonig85/clip/AverageSneakyAmazonFloof-tNl-n8wY1CHkNfKy 
+2024-08-03 22:41:32 Warn: [DEBUG:] https://www.twitch.tv/hornetlul/clip/FlirtyBlithePotSoBayed-DRNq8JAihgpRESwh 
+2024-08-03 22:42:42 Warn: [DEBUG:] 1 / options: { debug: true, overwrite: false }
+2024-08-03 22:42:42 Warn: [DEBUG:] 1 / args: [ "1" ]
+2024-08-03 22:42:42 Warn: [DEBUG:] 1 / basePath: /home/acidtib/code/clipper/results/1/clips
+2024-08-03 22:42:44 Warn: [DEBUG:] https://www.twitch.tv/hornetlul/clip/FlirtyBlithePotSoBayed-DRNq8JAihgpRESwh 
+2024-08-03 22:42:44 Warn: [DEBUG:] https://www.twitch.tv/sonnekonig85/clip/AverageSneakyAmazonFloof-tNl-n8wY1CHkNfKy 

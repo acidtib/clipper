@@ -1,5 +1,5 @@
 {
   "tasks": {
-    "run": "deno run --allow-read --allow-write --unstable-kv src/mod.ts"
+    "run": "deno run --allow-read --allow-write --allow-run --unstable-kv src/mod.ts"
   }
 }
