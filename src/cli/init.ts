@@ -4,6 +4,7 @@ import {
   resolve,
   ensureDir,
   logger,
+  parseYaml
 } from "../deps.ts";
 
 interface Options {
@@ -19,11 +20,15 @@ export default new Command()
 
 
 class Action {
+  options: Options;
+
   constructor(options: Options, ...args: Array<string>) {
     if (options.debug) {
       logger.warn(`${colors.bold.green("[DEBUG:]")} options:`, options);
       logger.warn(`${colors.bold.green("[DEBUG:]")} args:`, args);
     }
+
+    this.options = options
   }
 
   async execute() {
@@ -47,7 +52,7 @@ class Action {
         const content = `# config.yml
 # Determines whether to include a frame around the video.
 # Set to true to enable the frame feature, or false to disable it.
-use_frame: true
+use_frame: false
 
 # Indicates whether to include an intro at the beginning of the video. 
 # Set to true to include the intro, or false to omit it.
@@ -67,7 +72,7 @@ transition_path: ./assets/transition.mp4
 
 # Indicates whether to include an outro at the end of the video.
 # Set to true to include the outro, or false to omit it.
-use_outro: true
+use_outro: false
 
 # Specifies the file path to the MP4 video used as the outro. 
 # This path should point to a valid MP4 file that will be appended to the end of the video if use_outtro is set to true.
@@ -77,6 +82,11 @@ outro_path: ./assets/outro.mp4
       } else {
         logger.error(`Error checking for: ${pathFileConfig}`, error);
       }
+    }
+
+    if (this.options.debug) {
+      const configContent = await Deno.readTextFile(pathFileConfig);
+      logger.warn(colors.bold.green(`[DEBUG:]`), parseYaml(configContent));
     }
 
     try {
