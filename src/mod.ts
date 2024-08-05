@@ -19,7 +19,7 @@ const command = new Command()
   })
 
 command
-  .command("new", (await import("./cli/new.ts")).default as unknown as Command)
+  .command("video", (await import("./cli/video.ts")).default as unknown as Command)
   .command("download", (await import("./cli/download.ts")).default as unknown as Command)
   .command("help", new HelpCommand())
   .parse(Deno.args);

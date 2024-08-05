@@ -9,3 +9,4 @@ export { ensureDir } from "https://deno.land/std@0.224.0/fs/mod.ts";
 export { logger } from "./lib/logger.ts";
 export { kv } from "./lib/db.ts"
 export { YtDlp } from "./lib/yt-dlp.ts"
+export { FFmpeg } from "./lib/ffmpeg.ts"
