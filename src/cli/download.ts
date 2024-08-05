@@ -3,6 +3,7 @@ import {
   colors,
   resolve,
   ensureDir,
+  exists,
   logger,
   YtDlp,
   FFmpeg
@@ -10,6 +11,7 @@ import {
 
 interface Options {
   debug?: boolean,
+  crf?: number,
   overwrite: boolean,
 }
 
@@ -32,7 +34,8 @@ class Action {
   kvKey: string[];
   basePath: string;
   downloadsFilePath: string;
-  clipList: { url: string; start: string; end: string | null; }[];
+  ffmpeg: FFmpeg;
+  clipList: { url: string; start: string; end: string; }[];
 
   constructor(options: Options, ...args: Array<string>) {
     if (options.debug) {
@@ -49,6 +52,8 @@ class Action {
     this.options.debug && logger.warn(`${colors.bold.green("[DEBUG:]")} ${colors.bold.yellow.underline(this.id)} / basePath:`, this.basePath);
 
     this.kvKey = ["videos", this.id]
+
+    this.ffmpeg = new FFmpeg(this.options.crf, this.options.debug)
 
     this.clipList = [];
   }
@@ -67,32 +72,63 @@ class Action {
 
     // download each clip and normalize the audio
     content.split("\n").forEach(async (line, index) => {
-      const clipData = this.parseLine(line.trim())
-      logger.info(`${colors.bold.yellow.underline(this.id)} / Downloading ${clipData.url}.`);
+      let clipData = this.parseLine(line.trim())
+      let trimClip = false
+      logger.info(`${colors.bold.yellow.underline(this.id)} / Working on ${clipData.url}.`);
       this.options.debug && logger.warn(colors.bold.green(`[DEBUG:]`), clipData);
       this.clipList.push(clipData)
 
       const { clipId, username } = this.parseClipUrl(clipData.url)
+      const rawPath = resolve(this.basePath, `raw_${index}_${username}_${clipId}.mp4`)
+      let sourcePath = rawPath
       
-      // download the clip
-      await this.download(clipData.url, index, clipId!, username!)
+      // download the clip using yt-dlp
+      await new YtDlp(clipData.url, rawPath.replace(".mp4", ".%(ext)s"), this.options.debug).fetch()
+
+      // get the duration of the clip
+      const clipDuration = Math.floor(await this.ffmpeg.getAudioDuration(rawPath) * 1000) / 1000  
+
+      // trim clip
+      const startTime = await this.ffmpeg.parseTime(clipData.start)
+      let endTime = await this.ffmpeg.parseTime(clipData.end)
+      if (endTime === 0) {
+        clipData.end = await this.ffmpeg.formatTime(clipDuration)
+        endTime = await this.ffmpeg.parseTime(clipData.end)
+      }
+
+      this.options.debug && logger.warn(colors.bold.green(`[DEBUG:]`), clipData);
+
+      if (startTime !== 0 || endTime !== clipDuration) {
+        trimClip = true
+      }
+
+      if (this.options.debug) {
+        console.log("startTime", startTime);
+        console.log("endTime", endTime);
+        console.log("clipDuration", clipDuration);
+        console.log("trimClip", trimClip);
+      }
+      
+      if (trimClip) {
+        logger.warn(`${colors.bold.yellow.underline(this.id)} / trimming clip`)        
+        await this.ffmpeg.trim(rawPath, resolve(this.basePath, `trim_${index}_${username}_${clipId}.mp4`), startTime, endTime)
+
+        sourcePath = resolve(this.basePath, `trim_${index}_${username}_${clipId}.mp4`)
+      }
 
       // normalize the audio
-      await this.normalize_audio(index, clipId!, username!)
+      await this.ffmpeg.normalizeAudio(sourcePath, resolve(this.basePath, `${index}_${username}_${clipId}.mp4`))
 
-      // remove the raw file
-      await Deno.remove(resolve(this.basePath, `raw_${index}_${username}_${clipId}.mp4`))
+      // remove the temp files
+      for (const file of [
+        rawPath, 
+        sourcePath
+      ]) {
+        if (await exists(file)) {
+          Deno.removeSync(file);
+        }
+      }
     })
-  }
-
-  // download the clip using yt-dlp
-  private async download(clipUrl: string, index: number, clipId: string, username: string) {
-    await new YtDlp(clipUrl, resolve(this.basePath, `raw_${index}_${username}_${clipId}.%(ext)s`), this.options.debug).fetch()
-  }
-
-  // normalize the audio
-  private async normalize_audio(index: number, clipId: string, username: string) {
-    await new FFmpeg(resolve(this.basePath, `raw_${index}_${username}_${clipId}.mp4`), resolve(this.basePath, `${index}_${username}_${clipId}.mp4`), this.options.debug).normalize_audio()
   }
 
   // parse username and clip ID from the URL
@@ -104,8 +140,8 @@ class Action {
     if (url.host.includes("twitch.tv")) {
       // Split the pathname to extract username and clip ID
       const segments = url.pathname.split('/');
-      username = segments[1];
-      clipId = segments[3];
+      username = segments[1].toLowerCase();
+      clipId = segments[3].toLowerCase();
     }
 
     return { username, clipId };
@@ -114,8 +150,8 @@ class Action {
   // parse the line data
   private parseLine(line: string) {
     const parts = line.split(",");
-    let start = "0";
-    let end = null;
+    let start = "00:00:00.000";
+    let end = "00:00:00.000";
     let url = "";
   
     parts.forEach(part => {

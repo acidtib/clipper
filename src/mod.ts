@@ -11,6 +11,7 @@ const command = new Command()
     Deno.exit(0);
   })
   .globalOption("-d, --debug", "Run in debug mode")
+  .globalOption("--crf <crf:number>", "Set ffmpeg quality.", { default: 5 })
   .option("-v, --version", "Output the version number", {
     standalone: true,
     action: () => {

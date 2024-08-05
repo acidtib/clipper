@@ -9,7 +9,7 @@ import {
 
 interface Options {
   debug?: boolean,
-  crf: number,
+  crf?: number,
   overwrite: boolean,
 }
 
@@ -17,7 +17,6 @@ export default new Command()
   .description("Create a new video")
   .arguments("<id:string>")
 
-  .option("--crf <crf:number>", "Set ffmpeg quality.", { default: 5 })
   .option("--overwrite", "Overwrite existing files.", { default: false })
 
   .action((options: Options, ...args) => {
