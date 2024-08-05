@@ -70,9 +70,14 @@ class Action {
 
     await ensureDir(this.basePath);
 
+    // clean up file content
+    const lines = content.split("\n")
+      .map(line => line.trim())  // Trim each line to remove leading/trailing whitespace
+      .filter(line => line && !line.startsWith("#"));  // Filter out empty lines and comments
+
     // download each clip and normalize the audio
-    content.split("\n").forEach(async (line, index) => {
-      let clipData = this.parseLine(line.trim())
+    lines.forEach(async (line, index) => {
+      let clipData = this.parseLine(line)
       let trimClip = false
       logger.info(`${colors.bold.yellow.underline(this.id)} / Working on ${clipData.url}.`);
       this.options.debug && logger.warn(colors.bold.green(`[DEBUG:]`), clipData);

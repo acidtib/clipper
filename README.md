@@ -1,6 +1,16 @@
-# clipper
+# clipper (Work In Progress)
 
 
+### Usage
+
+Create config file with `init` command
+```bash
+clippy init
 ```
-s:00:00:00.000,e:00:00:00.000,https://www.twitch.tv/hornetlul/clip/TriumphantWonderfulWasabiBibleThump--yjmM6yB3gJhTClJ
+
+Edit file `to_download.txt` with the links of the clips you want to download
+
+Download videos with `download` command, id is an arbitrary string that represents the video
+```bash
+clippy download <id>
 ```
