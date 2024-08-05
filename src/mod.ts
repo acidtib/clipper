@@ -20,6 +20,7 @@ const command = new Command()
   })
 
 command
+  .command("init", (await import("./cli/init.ts")).default as unknown as Command)
   .command("video", (await import("./cli/video.ts")).default as unknown as Command)
   .command("download", (await import("./cli/download.ts")).default as unknown as Command)
   .command("help", new HelpCommand())

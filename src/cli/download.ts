@@ -47,7 +47,7 @@ class Action {
 
     this.id = args[0]
 
-    this.downloadsFilePath = resolve("./", "assets", "clips.txt")
+    this.downloadsFilePath = resolve("./", "to_download.txt")
     this.basePath = resolve("./", "results", this.id, "clips")
     this.options.debug && logger.warn(`${colors.bold.green("[DEBUG:]")} ${colors.bold.yellow.underline(this.id)} / basePath:`, this.basePath);
 
