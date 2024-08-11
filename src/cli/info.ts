@@ -3,6 +3,7 @@ import {
   colors,
   resolve,
   logger,
+  kv
 } from "../deps.ts";
 
 interface Options {
@@ -19,6 +20,7 @@ export default new Command()
 
 
 class Action {
+  options: Options;
   id: string;
   kvKey: string[];
   basePath: string;
@@ -28,6 +30,8 @@ class Action {
       logger.warn(`${colors.bold.green("[DEBUG:]")} ${colors.bold.yellow.underline(args[0])} / options:`, options);
       logger.warn(`${colors.bold.green("[DEBUG:]")} ${colors.bold.yellow.underline(args[0])} / args:`, args);
     }
+
+    this.options = options
 
     this.id = args[0]
     this.basePath = resolve("./", "results", this.id)
@@ -44,5 +48,14 @@ class Action {
         logger.info(dirEntry.name);
       }
     }
+
+    const entryVideo = await kv.get(["videos", this.id]);
+    console.log(entryVideo);
+
+    const entryClips = await Array.fromAsync(kv.list({ prefix: ["videos", this.id, "clips"] }))
+    console.log("clips:", entryClips.length);
+    this.options.debug && logger.warn(entryClips);
+    
+    
   }
 }

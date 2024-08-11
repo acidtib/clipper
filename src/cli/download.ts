@@ -32,7 +32,7 @@ export default command
 class Action {
   options: Options;
   id: string;
-  kvKey: string[];
+  kvKeyVideo: string[];
   basePath: string;
   downloadsFilePath: string;
   ffmpeg: FFmpeg;
@@ -47,7 +47,7 @@ class Action {
     this.options = options
 
     this.id = args[0]
-    this.kvKey = ["videos", this.id]
+    this.kvKeyVideo = ["videos", this.id]
 
     this.downloadsFilePath = resolve("./", "to_download.txt")
     this.basePath = resolve("./", "results", this.id, "clips")
@@ -59,9 +59,10 @@ class Action {
   }
 
   async execute() {
+    
     const checkVideo = await kv.atomic()
-        .check({ key: this.kvKey, versionstamp: null }) // `null` versionstamps mean 'no value'
-        .set(this.kvKey, { id: this.id })
+        .check({ key: ["videos", this.id], versionstamp: null }) // `null` versionstamps mean 'no value'
+        .set(["videos", this.id], { id: this.id })
         .commit();
 
     this.options.debug && logger.warn(`${colors.bold.green("[DEBUG:]")} ${colors.bold.yellow.underline(this.id)} / checkVideo:`, checkVideo);
@@ -96,7 +97,7 @@ class Action {
       .filter(line => line && !line.startsWith("#"));  // Filter out empty lines and comments
 
     // download each clip and normalize the audio
-    lines.forEach(async (line, index) => {
+    lines.forEach(async (line, index) => {    
       let clipData = this.parseLine(line)
       let trimClip = false
       logger.info(`${colors.bold.yellow.underline(this.id)} / Working on ${clipData.url}`);
@@ -104,6 +105,7 @@ class Action {
       this.clipList.push(clipData)
 
       const { clipId, username } = this.parseClipUrl(clipData.url)
+  
       const rawPath = resolve(this.basePath, `raw_${index}_${username}_${clipId}.mp4`)
       let sourcePath = rawPath
       
@@ -111,7 +113,7 @@ class Action {
       await new YtDlp(clipData.url, rawPath.replace(".mp4", ".%(ext)s"), this.options.debug).fetch()
 
       // get the duration of the clip
-      const clipDuration = Math.floor(await this.ffmpeg.getAudioDuration(rawPath) * 1000) / 1000  
+      let clipDuration = Math.floor(await this.ffmpeg.getAudioDuration(rawPath) * 1000) / 1000
 
       // trim clip
       const startTime = await this.ffmpeg.parseTime(clipData.start)
@@ -136,14 +138,29 @@ class Action {
       
       if (trimClip) {
         // trim the clip
-        logger.warn(`${colors.bold.yellow.underline(this.id)} / trimming clip`)        
+        logger.warn(`${colors.bold.yellow.underline(this.id)} / trimming clip ${clipId} from ${startTime} to ${endTime}`);        
         await this.ffmpeg.trim(rawPath, resolve(this.basePath, `trim_${index}_${username}_${clipId}.mp4`), startTime, endTime)
 
         sourcePath = resolve(this.basePath, `trim_${index}_${username}_${clipId}.mp4`)
+
+        clipDuration = Math.floor(await this.ffmpeg.getAudioDuration(sourcePath) * 1000) / 1000
       }
 
       // normalize the audio
       await this.ffmpeg.normalizeAudio(sourcePath, resolve(this.basePath, `${index}_${username}_${clipId}.mp4`))
+
+      await kv.set(["videos", this.id, "clips", clipId!], {
+        id: clipId,
+        username: username,
+        source: "twitch",
+        source_url: clipData.url,
+        duration: clipDuration,
+        trim: {
+          start: startTime,
+          end: endTime,
+          action: trimClip
+        }
+      });
 
       // remove the temp files
       for (const file of [
