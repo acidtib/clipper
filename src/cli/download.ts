@@ -61,6 +61,7 @@ class Action {
   async execute() {
     let content
     try {
+      // read links from to_download.txt
       content = await Deno.readTextFile(this.downloadsFilePath);
     } catch (error) {
       logger.error(`${colors.bold.yellow.underline(this.downloadsFilePath)} / Error reading the file.`);
@@ -79,7 +80,7 @@ class Action {
     lines.forEach(async (line, index) => {
       let clipData = this.parseLine(line)
       let trimClip = false
-      logger.info(`${colors.bold.yellow.underline(this.id)} / Working on ${clipData.url}.`);
+      logger.info(`${colors.bold.yellow.underline(this.id)} / Working on ${clipData.url}`);
       this.options.debug && logger.warn(colors.bold.green(`[DEBUG:]`), clipData);
       this.clipList.push(clipData)
 
@@ -115,6 +116,7 @@ class Action {
       }
       
       if (trimClip) {
+        // trim the clip
         logger.warn(`${colors.bold.yellow.underline(this.id)} / trimming clip`)        
         await this.ffmpeg.trim(rawPath, resolve(this.basePath, `trim_${index}_${username}_${clipId}.mp4`), startTime, endTime)
 
