@@ -6,7 +6,8 @@ import {
   exists,
   logger,
   YtDlp,
-  FFmpeg
+  FFmpeg,
+  kv,
 } from "../deps.ts";
 
 interface Options {
@@ -46,12 +47,11 @@ class Action {
     this.options = options
 
     this.id = args[0]
+    this.kvKey = ["videos", this.id]
 
     this.downloadsFilePath = resolve("./", "to_download.txt")
     this.basePath = resolve("./", "results", this.id, "clips")
     this.options.debug && logger.warn(`${colors.bold.green("[DEBUG:]")} ${colors.bold.yellow.underline(this.id)} / basePath:`, this.basePath);
-
-    this.kvKey = ["videos", this.id]
 
     this.ffmpeg = new FFmpeg(this.options.crf, this.options.debug)
 
@@ -59,6 +59,25 @@ class Action {
   }
 
   async execute() {
+    const checkVideo = await kv.atomic()
+        .check({ key: this.kvKey, versionstamp: null }) // `null` versionstamps mean 'no value'
+        .set(this.kvKey, { id: this.id })
+        .commit();
+
+    this.options.debug && logger.warn(`${colors.bold.green("[DEBUG:]")} ${colors.bold.yellow.underline(this.id)} / checkVideo:`, checkVideo);
+
+    if (checkVideo.ok) {
+      logger.info(`${colors.bold.yellow.underline(this.id)} / New video id.`);
+    } else {
+      // video exists
+      if (this.options.overwrite) {
+        logger.info(`${colors.bold.yellow.underline(this.id)} / Overwriting files.`);
+      } else {
+        logger.info(`${colors.bold.yellow.underline(this.id)} / Video id already exists. Use --overwrite to overwrite it.`);
+        return
+      }
+    }
+
     let content
     try {
       // read links from to_download.txt
