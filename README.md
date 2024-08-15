@@ -54,10 +54,12 @@ brew install yt-dlp
 
 ### Usage
 
-Create environment with `init` command
+Create environment and config file with `init` command
 ```bash
 clipper init
 ```
+
+Global configuration can be changed on file `config.yml`
 
 Edit file `to_download.txt` with the links of the clips you want to download
 
