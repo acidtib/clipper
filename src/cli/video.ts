@@ -1,5 +1,5 @@
 import log from "https://deno.land/x/logger@v1.1.6/stdout.ts";
-import { Command, colors, resolve, ensureDir, logger, kv } from "../deps.ts";
+import { Command, colors, resolve, ensureDir, logger, kv, FFmpeg, } from "../deps.ts";
 
 interface Options {
   debug?: boolean;
@@ -22,6 +22,7 @@ class Action {
   id: string;
   kvKey: string[];
   basePath: string;
+  ffmpeg: FFmpeg;
 
   constructor(options: Options, ...args: Array<string>) {
     if (options.debug) {
@@ -45,6 +46,8 @@ class Action {
         `${colors.bold.green("[DEBUG:]")} ${colors.bold.yellow.underline(this.id)} / basePath:`,
         this.basePath,
       );
+
+    this.ffmpeg = new FFmpeg(this.options.crf, this.options.debug);
   }
 
   async execute() {
@@ -66,5 +69,23 @@ class Action {
 
     // create folder
     await ensureDir(this.basePath);
+
+    const entryClips = await Array.fromAsync(kv.list({ prefix: ["videos", this.id, "clips"] }))
+    console.log("clips:", entryClips.length);
+    this.options.debug && logger.warn(entryClips);
+
+    if (entryClips.length === 0) {
+      logger.info(
+        `${colors.bold.yellow.underline(this.id)} / Video has no clips.`,
+      );
+      return;
+    }
+
+    // stitch clips into video
+    await this.ffmpeg.concat(
+      entryClips.map((c) => c.value.file_path),
+      resolve(this.basePath, "output.mp4"),
+    )
+
   }
 }

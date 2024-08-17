@@ -117,6 +117,11 @@ class Action {
       .map((line) => line.trim()) // Trim each line to remove leading/trailing whitespace
       .filter((line) => line && !line.startsWith("#")); // Filter out empty lines and comments
 
+    if (lines.length === 0) {
+      logger.info(`${colors.bold.yellow.underline(this.id)} / No clips to download.`);
+      return;
+    }
+    
     // download each clip and normalize the audio
     lines.forEach(async (line, index) => {
       let clipData = this.parseLine(line);
@@ -197,12 +202,14 @@ class Action {
         resolve(this.basePath, `${index}_${username}_${clipId}.mp4`),
       );
 
+      // add the clip to the db
       await kv.set(["videos", this.id, "clips", clipId!], {
         id: clipId,
         username: username,
         source: "twitch",
         source_url: clipData.url,
         duration: clipDuration,
+        file_path: resolve(this.basePath, `${index}_${username}_${clipId}.mp4`),
         trim: {
           start: startTime,
           end: endTime,

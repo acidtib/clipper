@@ -96,6 +96,68 @@ class FFmpeg {
     return Number(new TextDecoder().decode(stdout));
   }
 
+  async concat(fileList: string[], savePath: string): Promise<number> {
+    // ffmpeg -i video1.mp4 -i video2.mp4 -i video3.mp4 -filter_complex "[0:v][0:a][1:v][1:a][2:v][2:a]concat=n=3:v=1:a=1[outv][outa]" -map "[outv]" -map "[outa]" output.mp4
+
+    // ffmpeg 
+    //   -i C:\\Users\\acidtib\\code\\clipper\\results\\1\\clips\\2_whothyfawk_busywildplumberyoudontsay-9nojqsw098-i1p_y.mp4 
+    //   -i C:\\Users\\acidtib\\code\\clipper\\results\\1\\clips\\1_whityyy_modernsucculentmonkeysquadgoals-cgunmp0lhnex_yzh.mp4 
+    //   -filter_complex "[0:v]setpts=PTS-STARTPTS,scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:-1:-1,setsar=1[v0]; [0:a]asetpts=PTS-STARTPTS[a0]; [1:v]setpts=PTS-STARTPTS,scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:-1:-1,setsar=1[v1]; [1:a]asetpts=PTS-STARTPTS[a1]; [v0][a0][v1][a1]concat=n=2:v=1:a=1[outv][outa]" 
+    //   -map "[outv]" -map "[outa]" 
+    //   -force_key_frames 'expr:gte(t,n_forced/2)' -c:v libx264 -crf 18 -bf 2 -c:a aac -q:a 1 -ac 2 -ar 48000 -use_editlist 0 -movflags +faststart -r 60 output.mp4
+
+    const filterList = fileList.map((f, i) => `[${i}:v]setpts=PTS-STARTPTS,scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:-1:-1,setsar=1[v${i}];`).join("");
+
+    const filterListAudio = fileList.map((f, i) => `[${i}:a]asetpts=PTS-STARTPTS[a${i}];`).join("");
+
+    const filterListSource = fileList.map((f, i) => `[v${i}][a${i}]`).join("");
+
+    const args = [
+      "-y", 
+      ...fileList.flatMap(file => ["-i", file]),
+      "-filter_complex", `${filterList}${filterListAudio}${filterListSource}concat=n=${fileList.length}:v=1:a=1[outv][outa]`, 
+      "-map", "[outv]", 
+      "-map", "[outa]",
+      "-force_key_frames", "expr:gte(t,n_forced/2)",
+      // "-c:v", "libx264",
+      // "-crf", "18",
+      
+      "-c:v", "h264_nvenc", 
+      "-preset", "slow",
+      "-qp", "15",
+      "-profile:v", "high",
+
+      "-bf", "2",
+      "-c:a", "aac",
+      "-q:a", "1",
+      "-ac", "2",
+      "-ar", "48000",
+      "-use_editlist", "0",
+      "-movflags", "+faststart",
+      "-r", "60",
+      savePath
+    ];
+
+    console.log(args.join(" "));
+    
+    const command = new Deno.Command("ffmpeg", {
+      args: args,
+    });
+
+    const { code, stdout, stderr } = await command.output();
+
+    this.debug && logger.warn(colors.bold.green(`[DEBUG:] ${colors.bold.yellow.underline(fileList.join(", "))}`), new TextDecoder().decode(stdout));
+
+    // raise error if code is not 0
+    if (code !== 0) {
+      logger.error(new TextDecoder().decode(stdout));
+      logger.error(new TextDecoder().decode(stderr));
+      throw new Error(`concat failed with code ${code}`);
+    }
+
+    return Number(new TextDecoder().decode(stdout));
+  }
+
   async formatTime(seconds: number) {
     const duration = moment.duration(seconds, 'seconds');
 
