@@ -125,7 +125,15 @@ class FFmpeg {
       "-force_key_frames", "expr:gte(t,n_forced/2)",      
 
       ...(this.device === "cpu" ? ["-c:v", "libx264", "-crf", this.atWhatQuality()] : []),
-      ...(this.device === "gpu" ? ["-c:v", "h264_nvenc", "-preset", "slow", "-qp", this.atWhatQuality(), "-profile:v", "high"] : []),
+      ...(this.device === "gpu" ? 
+        [
+          "-c:v", "h264_nvenc", 
+          "-rc", "constqp",
+          "-qmin", "17", "-qmax", "51",
+          "-tune", "hq",
+          "-preset", "p7", 
+          "-qp", this.atWhatQuality()
+        ] : []),
 
       "-bf", "2",
       "-c:a", "aac",

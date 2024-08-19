@@ -93,6 +93,11 @@ export default new Command()
         entryClips.map((c) => c.value.file_path),
         resolve(this.basePath, "output.mp4"),
       )
+
+      logger.info(
+        `${colors.bold.yellow.underline(this.id)} / Render complete.`,
+        `${colors.bold.yellow.underline(this.id)} / ${resolve(this.basePath, "output.mp4")}`,
+      );
   
     }
   }
