@@ -7,12 +7,16 @@ import moment from "https://deno.land/x/momentjs@2.29.1-deno/mod.ts";
 
 class FFmpeg {
   debug: boolean;
-  crf: number;
+  device: string;
+  quality: string;
 
-  constructor(crf: number = 5, debug = false) {
+  constructor(quality: string = "high", device: string = "cpu", debug = false) {
     this.debug = debug;
-    this.crf = crf;
+    this.quality = quality;
+    this.device = device.toLowerCase();
   }
+
+  
 
   async normalizeAudio(filePath: string, savePath: string): Promise<number> {
     const command = new Deno.Command("ffmpeg-normalize", {
@@ -75,9 +79,9 @@ class FFmpeg {
         "-i", filePath, 
         "-ss", startTime.toString(), 
         "-to", endTime.toString(), 
-        "-c:v", "libx264", 
+        ...(this.device === "cpu" ? ["-c:v", "libx264", "-crf", this.atWhatQuality()] : []),
+        ...(this.device === "gpu" ? ["-c:v", "h264_nvenc", "-preset", "slow", "-qp", this.atWhatQuality(), "-profile:v", "high"] : []),
         "-c:a", "aac", 
-        "-crf", this.crf.toString(), 
         savePath
       ],
     });
@@ -118,14 +122,10 @@ class FFmpeg {
       "-filter_complex", `${filterList}${filterListAudio}${filterListSource}concat=n=${fileList.length}:v=1:a=1[outv][outa]`, 
       "-map", "[outv]", 
       "-map", "[outa]",
-      "-force_key_frames", "expr:gte(t,n_forced/2)",
-      // "-c:v", "libx264",
-      // "-crf", "18",
-      
-      "-c:v", "h264_nvenc", 
-      "-preset", "slow",
-      "-qp", "15",
-      "-profile:v", "high",
+      "-force_key_frames", "expr:gte(t,n_forced/2)",      
+
+      ...(this.device === "cpu" ? ["-c:v", "libx264", "-crf", this.atWhatQuality()] : []),
+      ...(this.device === "gpu" ? ["-c:v", "h264_nvenc", "-preset", "slow", "-qp", this.atWhatQuality(), "-profile:v", "high"] : []),
 
       "-bf", "2",
       "-c:a", "aac",
@@ -182,6 +182,30 @@ class FFmpeg {
       (parseInt(milliseconds, 10) || 0) / 1000;
   
     return totalSeconds;
+  }
+
+  private atWhatQuality() {
+    // CRF 5 ≈ QP 10 (Very high quality, large file size)
+    // CRF 18 ≈ QP 18 (Good quality, reasonable file size)
+    // CRF 30 ≈ QP 28-30 (Lower quality, smaller file size)
+    
+    let qualityNumber: number;
+
+    switch (this.quality) {
+      case "high":
+        qualityNumber = this.device === "cpu" ? 5 : 10;
+        break;
+      case "good":
+        qualityNumber = this.device === "cpu" ? 15 : 18;
+        break;
+      case "low":
+        qualityNumber = this.device === "cpu" ? 30 : 28;
+        break;
+      default:
+        throw new Error(`quality must be one of high, good, or low`);
+    }
+
+    return qualityNumber.toString();
   }
   
 }

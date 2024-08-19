@@ -4,7 +4,7 @@ import {
   resolve,
   logger,
   kv
-} from "../deps.ts";
+} from "../../deps.ts";
 
 interface Options {
   debug?: boolean
@@ -55,7 +55,5 @@ class Action {
     const entryClips = await Array.fromAsync(kv.list({ prefix: ["videos", this.id, "clips"] }))
     console.log("clips:", entryClips.length);
     this.options.debug && logger.warn(entryClips);
-    
-    
   }
 }

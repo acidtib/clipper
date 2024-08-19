@@ -11,7 +11,6 @@ const command = new Command()
     Deno.exit(0);
   })
   .globalOption("-d, --debug", "Run in debug mode")
-  .globalOption("--crf <crf:number>", "Set ffmpeg quality.", { default: 5 })
   .option("-v, --version", "Output the version number", {
     standalone: true,
     action: () => {
@@ -21,8 +20,8 @@ const command = new Command()
 
 command
   .command("init", (await import("./cli/init.ts")).default as unknown as Command)
-  .command("info", (await import("./cli/info.ts")).default as unknown as Command)
+  // .command("info", (await import("./cli/info.ts")).default as unknown as Command)
   .command("video", (await import("./cli/video.ts")).default as unknown as Command)
-  .command("download", (await import("./cli/download.ts")).default as unknown as Command)
+  // .command("download", (await import("./cli/download.ts")).default as unknown as Command)
   .command("help", new HelpCommand())
   .parse(Deno.args);

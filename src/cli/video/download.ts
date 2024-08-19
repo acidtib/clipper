@@ -8,22 +8,20 @@ import {
   YtDlp,
   FFmpeg,
   kv,
-} from "../deps.ts";
+} from "../../deps.ts";
 
 interface Options {
   debug?: boolean;
-  crf?: number;
   overwrite: boolean;
+  device: string;
+  quality: string;
 }
 
 const command = new Command()
-  .description("Return video information.")
+  .description("Download clips from to_download.txt")
   .arguments("<id:string>")
-
-  .option("--overwrite", "Overwrite existing files.", { default: false })
-
-  .action((options: Options, ...args) => {
-    const action = new Action(options, ...args);
+  .action((options: void, ...args) => {
+    const action = new Action(options as unknown as Options, ...args);
     return action.execute();
   });
 
@@ -63,7 +61,7 @@ class Action {
         this.basePath,
       );
 
-    this.ffmpeg = new FFmpeg(this.options.crf, this.options.debug);
+    this.ffmpeg = new FFmpeg(this.options.quality, this.options.device, this.options.debug);
 
     this.clipList = [];
   }
