@@ -71,6 +71,69 @@ class FFmpeg {
     return Number(new TextDecoder().decode(stdout));
   }
 
+  async getVideoInfo(filePath: string): Promise<Record<string, any>> {
+    const command = new Deno.Command("ffprobe", {
+      args: [
+        "-i",
+        filePath,
+        "-v",
+        "quiet",
+        "-print_format",
+        "json",
+        "-show_format",
+        "-show_streams",
+      ],
+    });
+  
+    const { code, stdout, stderr } = await command.output();
+  
+    if (this.debug) {
+      logger.warn(
+        colors.bold.green(`[DEBUG:] ${colors.bold.yellow.underline(filePath)}`),
+        new TextDecoder().decode(stdout)
+      );
+    }
+  
+    // raise error if code is not 0
+    if (code !== 0) {
+      logger.error(new TextDecoder().decode(stdout));
+      logger.error(new TextDecoder().decode(stderr));
+      throw new Error(`getVideoInfo failed with code ${code}`);
+    }
+  
+    const info = JSON.parse(new TextDecoder().decode(stdout));
+  
+    // Extract relevant details
+    const format = info.format;
+    const streams = info.streams;
+    
+    const videoStream = streams.find((stream: any) => stream.codec_type === "video");
+    const audioStream = streams.find((stream: any) => stream.codec_type === "audio");
+  
+    return {
+      format_long_name: format.format_long_name,
+      duration: Number(format.duration),
+      size: this.formatBytes(Number(format.size)),
+      video: videoStream
+        ? {
+            codec_name: videoStream.codec_long_name,
+            width: videoStream.width,
+            height: videoStream.height,
+            frame_rate: videoStream.r_frame_rate,
+            bit_rate: this.formatBitrateToKbps(Number(videoStream.bit_rate)),
+          }
+        : null,
+      audio: audioStream
+        ? {
+            codec_name: audioStream.codec_long_name,
+            channels: audioStream.channels,
+            sample_rate: this.formatHertz(Number(audioStream.sample_rate)),
+            bit_rate: this.formatBitrateToKbps(Number(audioStream.bit_rate)),
+          }
+        : null,
+    };
+  }
+
   async trim(filePath: string, savePath: string, startTime: number, endTime: number): Promise<number> {
     const command = new Deno.Command("ffmpeg", {
       args: [
@@ -146,7 +209,7 @@ class FFmpeg {
       savePath
     ];
 
-    console.log(args.join(" "));
+    this.debug && console.log(args.join(" "));
     
     const command = new Deno.Command("ffmpeg", {
       args: args,
@@ -214,6 +277,31 @@ class FFmpeg {
     }
 
     return qualityNumber.toString();
+  }
+
+  private formatBytes(bytes: number): string {
+    const sizes = ["B", "KB", "MB", "GB", "TB"];
+    let i = 0;
+    while (bytes >= 1024 && i < sizes.length) {
+      bytes /= 1024;
+      i++;
+    }
+    return `${bytes.toFixed(2)} ${sizes[i]}`;
+  }
+
+  private formatBitrateToKbps(bitrate: number): string {
+    const kbps = Math.round(bitrate / 1000);
+    return `${kbps}kbps`;
+  }
+
+  private formatHertz(hertz: number): string {
+    const sizes = ["Hz", "KHz", "MHz", "GHz"];
+    let i = 0;
+    while (hertz >= 1000 && i < sizes.length) {
+      hertz /= 1000;
+      i++;
+    }
+    return `${hertz.toFixed(2)} ${sizes[i]}`;
   }
   
 }

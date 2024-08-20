@@ -7,7 +7,7 @@ import {
   logger,
   YtDlp,
   FFmpeg,
-  kv,
+  db,
 } from "../../deps.ts";
 
 interface Options {
@@ -30,7 +30,6 @@ export default command;
 class Action {
   options: Options;
   id: string;
-  kvKeyVideo: string[];
   basePath: string;
   downloadsFilePath: string;
   ffmpeg: FFmpeg;
@@ -51,7 +50,6 @@ class Action {
     this.options = options;
 
     this.id = args[0];
-    this.kvKeyVideo = ["videos", this.id];
 
     this.downloadsFilePath = resolve("./", "to_download.txt");
     this.basePath = resolve("./", "results", this.id, "clips");
@@ -67,37 +65,50 @@ class Action {
   }
 
   async execute() {
-    const checkVideo = await kv
-      .atomic()
-      .check({ key: ["videos", this.id], versionstamp: null }) // `null` versionstamps mean 'no value'
-      .set(["videos", this.id], { id: this.id, step: "downloading" })
-      .commit();
+    // check that video id exists
+    const video = await db.videos.findFirst({
+      where: { id: this.id }
+    });
 
     this.options.debug &&
       logger.warn(
-        `${colors.bold.green("[DEBUG:]")} ${colors.bold.yellow.underline(this.id)} / checkVideo:`,
-        checkVideo,
+        `${colors.bold.green("[DEBUG:]")} ${colors.bold.yellow.underline(this.id)} / video:`,
+        video,
       );
-
-    if (checkVideo.ok) {
-      logger.info(`${colors.bold.yellow.underline(this.id)} / New video id.`);
-    } else {
+    
+    if (video) {
       // video exists
       if (this.options.overwrite) {
         logger.info(
           `${colors.bold.yellow.underline(this.id)} / Overwriting files.`,
         );
 
-        // update kv value
-        const { value } = await kv.get(this.kvKeyVideo);
-        value.step = "downloading";
-        await kv.set(this.kvKeyVideo, value);
+        // update step value
+        await db.videos.update({
+          where: { id: this.id },
+          data: {
+            step: "download",
+          },
+        })
+
       } else {
         logger.info(
           `${colors.bold.yellow.underline(this.id)} / Video id already exists. Use --overwrite to overwrite it.`,
         );
         return;
       }
+
+    } else {
+      logger.info(`${colors.bold.yellow.underline(this.id)} / New video id.`);
+
+      // create new video
+      await db.videos.create({
+        data: {
+          id: this.id,
+          createdAt: new Date(),
+          step: "download",
+        },
+      });
     }
 
     let content;
@@ -126,7 +137,7 @@ class Action {
     }
     
     // download each clip and normalize the audio
-    lines.forEach(async (line, index) => {
+    await Promise.all(lines.map(async (line, index) => {
       let clipData = this.parseLine(line);
       let trimClip = false;
       logger.info(
@@ -152,8 +163,7 @@ class Action {
       ).fetch();
 
       // get the duration of the clip
-      let clipDuration =
-        Math.floor((await this.ffmpeg.getAudioDuration(rawPath)) * 1000) / 1000;
+      let clipDuration = Math.floor((await this.ffmpeg.getAudioDuration(rawPath)) * 1000) / 1000;
 
       // trim clip
       const startTime = await this.ffmpeg.parseTime(clipData.start);
@@ -163,8 +173,7 @@ class Action {
         endTime = await this.ffmpeg.parseTime(clipData.end);
       }
 
-      this.options.debug &&
-        logger.warn(colors.bold.green(`[DEBUG:]`), clipData);
+      this.options.debug && logger.warn(colors.bold.green(`[DEBUG:]`), clipData);
 
       if (startTime !== 0 || endTime !== clipDuration) {
         trimClip = true;
@@ -205,20 +214,51 @@ class Action {
         resolve(this.basePath, `${index}_${username}_${clipId}.mp4`),
       );
 
-      // add the clip to the db
-      await kv.set(["videos", this.id, "clips", clipId!], {
-        id: clipId,
-        username: username,
-        source: "twitch",
-        source_url: clipData.url,
-        duration: clipDuration,
-        file_path: resolve(this.basePath, `${index}_${username}_${clipId}.mp4`),
-        trim: {
-          start: startTime,
-          end: endTime,
-          action: trimClip,
+      const findClip = await db.clips.findFirst({
+        where: {
+          id: clipId,
+          videoId: this.id
         },
-      });
+      })
+
+      if (findClip) {
+        // update the clip in the db
+        await db.clips.update({
+          where: {
+            id: clipId,
+            videoId: this.id
+          },
+          data: {
+            username: username!,
+            source: "twitch",
+            source_url: clipData.url,
+            duration: clipDuration,
+            file_path: resolve(this.basePath, `${index}_${username}_${clipId}.mp4`),
+            trim_start: startTime,
+            trim_end: endTime,
+            trim_action: trimClip,
+          },
+        })
+        
+      } else {
+        // add the clip to the db
+        await db.clips.create({
+          data: {
+            id: clipId!,
+            videoId: this.id,
+            order: index,
+            username: username!,
+            source: "twitch",
+            source_url: clipData.url,
+            duration: clipDuration,
+            file_path: resolve(this.basePath, `${index}_${username}_${clipId}.mp4`),
+            trim_start: startTime,
+            trim_end: endTime,
+            trim_action: trimClip,
+            createdAt: new Date(),
+          },
+        });
+      }
 
       // remove the temp files
       for (const file of [rawPath, sourcePath]) {
@@ -226,7 +266,12 @@ class Action {
           Deno.removeSync(file);
         }
       }
-    });
+    }));
+
+    logger.info(
+      `${colors.bold.yellow.underline(this.id)} / Done downloading ${this.clipList.length} clips`,
+    );
+
   }
 
   // parse username and clip ID from the URL

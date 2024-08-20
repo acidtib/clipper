@@ -4,7 +4,7 @@ import {
   resolve,
   ensureDir,
   logger,
-  kv,
+  db,
   FFmpeg
 } from "../../deps.ts";
 
@@ -27,7 +27,6 @@ export default new Command()
   class Action {
     options: Options;
     id: string;
-    kvKey: string[];
     basePath: string;
     ffmpeg: FFmpeg;
   
@@ -45,7 +44,6 @@ export default new Command()
   
       this.options = options;
       this.id = args[0];
-      this.kvKey = ["videos", this.id];
   
       this.basePath = resolve("./", "results", this.id);
       this.options.debug &&
@@ -58,16 +56,41 @@ export default new Command()
     }
   
     async execute() {
-      const checkVideo = await kv.get(this.kvKey);
+      const video = await db.videos.findFirst({
+        where: { id: this.id },
+        include: {
+          clips: true
+        }
+      });
   
       this.options.debug &&
         logger.warn(
-          `${colors.bold.green("[DEBUG:]")} ${colors.bold.yellow.underline(this.id)} / checkVideo:`,
-          checkVideo,
+          `${colors.bold.green("[DEBUG:]")} ${colors.bold.yellow.underline(this.id)} / video:`,
+          video,
         );
   
       // check that video id exists
-      if (checkVideo.value === null) {
+      if (video) {
+        if (this.options.overwrite) {
+          logger.info(
+            `${colors.bold.yellow.underline(this.id)} / Overwriting files.`,
+          );
+  
+          // update step value
+          await db.videos.update({
+            where: { id: this.id },
+            data: {
+              step: "rendering",
+            },
+          })
+  
+        } else {
+          logger.info(
+            `${colors.bold.yellow.underline(this.id)} / Video id already exists. Use --overwrite to overwrite it.`,
+          );
+          return;
+        }
+      } else {
         logger.info(
           `${colors.bold.yellow.underline(this.id)} / Cant find video.`,
         );
@@ -76,28 +99,40 @@ export default new Command()
   
       // create folder
       await ensureDir(this.basePath);
+      
+      const clips = video.clips;
+
+      this.options.debug && logger.warn(clips);
   
-      const entryClips = await Array.fromAsync(kv.list({ prefix: ["videos", this.id, "clips"] }))
-      console.log("clips:", entryClips.length);
-      this.options.debug && logger.warn(entryClips);
-  
-      if (entryClips.length === 0) {
+      if (clips.length === 0) {
         logger.info(
           `${colors.bold.yellow.underline(this.id)} / Video has no clips.`,
         );
         return;
       }
-  
+
+      logger.info(`${colors.bold.yellow.underline(this.id)} / Redering video with ${clips.length} clips using ${this.options.device} at ${this.options.quality} quality.`);
+
       // stitch clips into video
       await this.ffmpeg.concat(
-        entryClips.map((c) => c.value.file_path),
+        clips
+          .sort((a, b) => a.order - b.order)
+          .map((c) => c.file_path!),
         resolve(this.basePath, "output.mp4"),
       )
 
-      logger.info(
-        `${colors.bold.yellow.underline(this.id)} / Render complete.`,
-        `${colors.bold.yellow.underline(this.id)} / ${resolve(this.basePath, "output.mp4")}`,
-      );
+      await db.videos.update({
+        where: { id: this.id },
+        data: {
+          output: resolve(this.basePath, "output.mp4"),
+        },
+      })
+
+      logger.info(`${colors.bold.yellow.underline(this.id)} / Render complete.`);
+      logger.info(`${colors.bold.yellow.underline(this.id)} / Output: ${resolve(this.basePath, "output.mp4")}`);
+
+      const videoDetails = await this.ffmpeg.getVideoInfo(resolve(this.basePath, "output.mp4"));
+      logger.info(`${colors.bold.yellow.underline(this.id)} / Video Details:`, videoDetails);
   
     }
   }

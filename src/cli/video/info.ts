@@ -3,7 +3,7 @@ import {
   colors,
   resolve,
   logger,
-  kv
+  db
 } from "../../deps.ts";
 
 interface Options {
@@ -22,7 +22,6 @@ export default new Command()
 class Action {
   options: Options;
   id: string;
-  kvKey: string[];
   basePath: string;
 
   constructor(options: Options, ...args: Array<string>) {
@@ -35,25 +34,28 @@ class Action {
 
     this.id = args[0]
     this.basePath = resolve("./", "results", this.id)
-    this.kvKey = ["videos", this.id]
   }
 
   async execute() {
+
     logger.info(`${colors.bold.yellow.underline(this.id)} / Files:`, this.basePath);
-    
     for await (const dirEntry of Deno.readDir(this.basePath)) {
       if (dirEntry.isDirectory) {
-        logger.info(dirEntry.name + "/");
+        logger.info(`${colors.bold.yellow.underline(this.id)} /`, dirEntry.name + "/");
       } else {
-        logger.info(dirEntry.name);
+        logger.info(`${colors.bold.yellow.underline(this.id)} /`, dirEntry.name);
       }
     }
 
-    const entryVideo = await kv.get(["videos", this.id]);
-    console.log(entryVideo);
+    const video = await db.videos.findFirst({
+      where: { id: this.id },
+      include: {
+        clips: true
+      }
+    });
 
-    const entryClips = await Array.fromAsync(kv.list({ prefix: ["videos", this.id, "clips"] }))
-    console.log("clips:", entryClips.length);
-    this.options.debug && logger.warn(entryClips);
+    logger.info(`${colors.bold.yellow.underline(this.id)} / Clips:`, video.clips.length);
+
+    logger.info(`${colors.bold.yellow.underline(this.id)} / Video Data:`, video);
   }
 }
