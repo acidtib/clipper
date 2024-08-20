@@ -87,6 +87,11 @@ class Action {
         logger.info(
           `${colors.bold.yellow.underline(this.id)} / Overwriting files.`,
         );
+
+        // update kv value
+        const { value } = await kv.get(this.kvKeyVideo);
+        value.step = "downloading";
+        await kv.set(this.kvKeyVideo, value);
       } else {
         logger.info(
           `${colors.bold.yellow.underline(this.id)} / Video id already exists. Use --overwrite to overwrite it.`,
