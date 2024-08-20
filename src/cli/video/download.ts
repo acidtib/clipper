@@ -70,11 +70,7 @@ class Action {
       where: { id: this.id }
     });
 
-    this.options.debug &&
-      logger.warn(
-        `${colors.bold.green("[DEBUG:]")} ${colors.bold.yellow.underline(this.id)} / video:`,
-        video,
-      );
+    this.options.debug && logger.warn(`${colors.bold.green("[DEBUG:]")} ${colors.bold.yellow.underline(this.id)} / video:`, video);
     
     if (video) {
       // video exists
@@ -82,15 +78,6 @@ class Action {
         logger.info(
           `${colors.bold.yellow.underline(this.id)} / Overwriting files.`,
         );
-
-        // update step value
-        await db.videos.update({
-          where: { id: this.id },
-          data: {
-            step: "download",
-          },
-        })
-
       } else {
         logger.info(
           `${colors.bold.yellow.underline(this.id)} / Video id already exists. Use --overwrite to overwrite it.`,
@@ -106,7 +93,6 @@ class Action {
         data: {
           id: this.id,
           createdAt: new Date(),
-          step: "download",
         },
       });
     }

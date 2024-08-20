@@ -16,7 +16,6 @@ const kv = await Deno.openKv(dbPath);
 export const Video = z.object({
   id: z.string().describe("primary"),
   createdAt: z.date(),
-  step: z.string(),
   output: z.string().optional(),
 });
 

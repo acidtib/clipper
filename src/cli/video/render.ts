@@ -68,42 +68,36 @@ export default new Command()
           `${colors.bold.green("[DEBUG:]")} ${colors.bold.yellow.underline(this.id)} / video:`,
           video,
         );
-  
-      // check that video id exists
-      if (video) {
+
+      // check that video exists
+      if (!video) {
+        logger.info(`${colors.bold.yellow.underline(this.id)} / Cant find video.`);
+        return;
+      }
+
+      // check if we have already rendered the video
+      if (video.output) {
         if (this.options.overwrite) {
           logger.info(
             `${colors.bold.yellow.underline(this.id)} / Overwriting files.`,
           );
-  
-          // update step value
-          await db.videos.update({
-            where: { id: this.id },
-            data: {
-              step: "rendering",
-            },
-          })
-  
+          // proceed with rendering
         } else {
           logger.info(
-            `${colors.bold.yellow.underline(this.id)} / Video id already exists. Use --overwrite to overwrite it.`,
+            `${colors.bold.yellow.underline(this.id)} / Video has already been rendered. Use --overwrite to re-render it.`,
           );
           return;
         }
-      } else {
-        logger.info(
-          `${colors.bold.yellow.underline(this.id)} / Cant find video.`,
-        );
-        return;
       }
-  
+      
       // create folder
       await ensureDir(this.basePath);
-      
+
       const clips = video.clips;
 
       this.options.debug && logger.warn(clips);
-  
+      
+      // ensure we have clips
       if (clips.length === 0) {
         logger.info(
           `${colors.bold.yellow.underline(this.id)} / Video has no clips.`,
