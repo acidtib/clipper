@@ -115,9 +115,7 @@ export default new Command()
 
       // stitch clips into video
       await this.ffmpeg.concat(
-        clips
-          .sort((a, b) => a.order - b.order)
-          .map((c) => c.file_path!),
+        clips.sort((a, b) => a.order - b.order),
         resolve(this.basePath, "output.mp4"),
       )
 
