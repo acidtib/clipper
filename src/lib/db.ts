@@ -10,17 +10,18 @@ const dbPath = resolve(dbDir, "kv.sqlite3");
 
 await ensureDir(dbDir);
 
+// open db
 const kv = await Deno.openKv(dbPath);
 
-
-export const Video = z.object({
+// models
+const Video = z.object({
   id: z.string().describe("primary"),
   createdAt: z.date(),
   step: z.string(),
   output: z.string().optional(),
 });
 
-export const Clip = z.object({
+const Clip = z.object({
   id: z.string().describe("primary"),
   createdAt: z.date(),
   username: z.string(),
@@ -37,6 +38,7 @@ export const Clip = z.object({
   videoId: z.string(),
 });
 
+// schema
 const db = createPentagon(kv, {
   videos: {
     schema: Video,
@@ -52,4 +54,4 @@ const db = createPentagon(kv, {
   }
 });
 
-export { db }
+export { db, Video, Clip }

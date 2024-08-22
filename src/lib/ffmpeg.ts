@@ -1,6 +1,8 @@
 import { 
   colors,
-  logger
+  logger,
+  config,
+  resolve
 } from "../deps.ts";
 
 import moment from "https://deno.land/x/momentjs@2.29.1-deno/mod.ts";
@@ -163,41 +165,66 @@ class FFmpeg {
     return Number(new TextDecoder().decode(stdout));
   }
 
+
+  // ffmpeg -i video1.mp4 -i video2.mp4 -i video3.mp4 -filter_complex "[0:v][0:a][1:v][1:a][2:v][2:a]concat=n=3:v=1:a=1[outv][outa]" -map "[outv]" -map "[outa]" output.mp4 
+  // ffmpeg 
+  //   -i C:\\Users\\acidtib\\code\\clipper\\results\\1\\clips\\2_whothyfawk_busywildplumberyoudontsay-9nojqsw098-i1p_y.mp4 
+  //   -i C:\\Users\\acidtib\\code\\clipper\\results\\1\\clips\\1_whityyy_modernsucculentmonkeysquadgoals-cgunmp0lhnex_yzh.mp4 
+  //   -filter_complex "[0:v]setpts=PTS-STARTPTS,scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:-1:-1,setsar=1[v0]; [0:a]asetpts=PTS-STARTPTS[a0]; [1:v]setpts=PTS-STARTPTS,scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:-1:-1,setsar=1[v1]; [1:a]asetpts=PTS-STARTPTS[a1]; [v0][a0][v1][a1]concat=n=2:v=1:a=1[outv][outa]" 
+  //   -map "[outv]" -map "[outa]" 
+  //   -force_key_frames 'expr:gte(t,n_forced/2)' -c:v libx264 -crf 18 -bf 2 -c:a aac -q:a 1 -ac 2 -ar 48000 -use_editlist 0 -movflags +faststart -r 60 output.mp4  
   async concat(fileList: string[], savePath: string): Promise<number> {
-    // ffmpeg -i video1.mp4 -i video2.mp4 -i video3.mp4 -filter_complex "[0:v][0:a][1:v][1:a][2:v][2:a]concat=n=3:v=1:a=1[outv][outa]" -map "[outv]" -map "[outa]" output.mp4
-
-    // ffmpeg 
-    //   -i C:\\Users\\acidtib\\code\\clipper\\results\\1\\clips\\2_whothyfawk_busywildplumberyoudontsay-9nojqsw098-i1p_y.mp4 
-    //   -i C:\\Users\\acidtib\\code\\clipper\\results\\1\\clips\\1_whityyy_modernsucculentmonkeysquadgoals-cgunmp0lhnex_yzh.mp4 
-    //   -filter_complex "[0:v]setpts=PTS-STARTPTS,scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:-1:-1,setsar=1[v0]; [0:a]asetpts=PTS-STARTPTS[a0]; [1:v]setpts=PTS-STARTPTS,scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:-1:-1,setsar=1[v1]; [1:a]asetpts=PTS-STARTPTS[a1]; [v0][a0][v1][a1]concat=n=2:v=1:a=1[outv][outa]" 
-    //   -map "[outv]" -map "[outa]" 
-    //   -force_key_frames 'expr:gte(t,n_forced/2)' -c:v libx264 -crf 18 -bf 2 -c:a aac -q:a 1 -ac 2 -ar 48000 -use_editlist 0 -movflags +faststart -r 60 output.mp4
-
-    const filterList = fileList.map((f, i) => `[${i}:v]setpts=PTS-STARTPTS,scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:-1:-1,setsar=1[v${i}];`).join("");
-
-    const filterListAudio = fileList.map((f, i) => `[${i}:a]asetpts=PTS-STARTPTS[a${i}];`).join("");
-
-    const filterListSource = fileList.map((f, i) => `[v${i}][a${i}]`).join("");
-
+    const transitionEnabled = config.get<boolean>("use_transition");
+    const introEnabled = config.get<boolean>("use_intro");
+    const outroEnabled = config.get<boolean>("use_outro");
+  
+    const transitionPath = transitionEnabled ? resolve(config.get<string>("transition_path")!) : null;
+    const introPath = introEnabled ? resolve(config.get<string>("intro_path")!) : null;
+    const outroPath = outroEnabled ? resolve(config.get<string>("outro_path")!) : null;
+  
+    // Build the file list with optional intro, transitions, and outro
+    let adjustedFileList = introEnabled ? [introPath!] : [];
+    adjustedFileList = adjustedFileList.concat(
+      transitionEnabled
+        ? fileList.flatMap((file, i) => (i < fileList.length - 1 ? [file, transitionPath!] : [file]))
+        : fileList
+    );
+    if (outroEnabled) adjustedFileList.push(outroPath!);
+  
+    // Generate filter complex for video processing
+    const filterList = adjustedFileList.map((f, i) => {
+      if (introEnabled && i === 0) {
+        return `[${i}:v]setpts=PTS-STARTPTS,settb=AVTB,scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:-1:-1,setsar=1,drawtext=fontfile=assets/fonts/CowboyHippiePro.otf:text='hello':x=(w-text_w)/2:y=700:fontsize=220:fontcolor=#78854A[v${i}];`;
+      }
+      if (outroEnabled && i === adjustedFileList.length - 1) {
+        return `[${i}:v]setpts=PTS-STARTPTS,settb=AVTB,scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:-1:-1,setsar=1[v${i}];`;
+      }
+      return `[${i}:v]setpts=PTS-STARTPTS,scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:-1:-1,setsar=1[v${i}];`;
+    }).join("");
+  
+    const filterListAudio = adjustedFileList.map((f, i) => `[${i}:a]asetpts=PTS-STARTPTS[a${i}];`).join("");
+  
+    const filterListSource = adjustedFileList.map((f, i) => `[v${i}][a${i}]`).join("");
+  
     const args = [
-      "-y", 
-      ...fileList.flatMap(file => ["-i", file]),
-      "-filter_complex", `${filterList}${filterListAudio}${filterListSource}concat=n=${fileList.length}:v=1:a=1[outv][outa]`, 
-      "-map", "[outv]", 
+      "-y",
+      ...adjustedFileList.flatMap(file => ["-i", file]),
+      "-filter_complex", `${filterList}${filterListAudio}${filterListSource}concat=n=${adjustedFileList.length}:v=1:a=1[outv][outa]`,
+      "-map", "[outv]",
       "-map", "[outa]",
-      "-force_key_frames", "expr:gte(t,n_forced/2)",      
-
+      "-force_key_frames", "expr:gte(t,n_forced/2)",
+  
       ...(this.device === "cpu" ? ["-c:v", "libx264", "-crf", this.atWhatQuality()] : []),
-      ...(this.device === "gpu" ? 
+      ...(this.device === "gpu" ?
         [
-          "-c:v", "h264_nvenc", 
+          "-c:v", "h264_nvenc",
           "-rc", "constqp",
           "-qmin", "17", "-qmax", "51",
           "-tune", "hq",
-          "-preset", "p7", 
+          "-preset", "p7",
           "-qp", this.atWhatQuality()
         ] : []),
-
+  
       "-bf", "2",
       "-c:a", "aac",
       "-q:a", "1",
@@ -208,26 +235,29 @@ class FFmpeg {
       "-r", "60",
       savePath
     ];
-
+  
     this.debug && console.log(args.join(" "));
-    
+  
     const command = new Deno.Command("ffmpeg", {
       args: args,
     });
-
+  
     const { code, stdout, stderr } = await command.output();
-
+  
     this.debug && logger.warn(colors.bold.green(`[DEBUG:] ${colors.bold.yellow.underline(fileList.join(", "))}`), new TextDecoder().decode(stdout));
-
-    // raise error if code is not 0
+  
+    // Raise error if code is not 0
     if (code !== 0) {
       logger.error(new TextDecoder().decode(stdout));
       logger.error(new TextDecoder().decode(stderr));
       throw new Error(`concat failed with code ${code}`);
     }
-
+  
     return Number(new TextDecoder().decode(stdout));
   }
+  
+  
+  
 
   async formatTime(seconds: number) {
     const duration = moment.duration(seconds, 'seconds');

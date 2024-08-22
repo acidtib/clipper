@@ -91,6 +91,11 @@ class Action {
           },
         })
 
+        // clean up current clips from db
+        await db.clips.deleteMany({
+          where: { videoId: this.id }
+        });
+
       } else {
         logger.info(
           `${colors.bold.yellow.underline(this.id)} / Video id already exists. Use --overwrite to overwrite it.`,

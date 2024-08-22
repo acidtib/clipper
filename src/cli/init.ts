@@ -4,7 +4,8 @@ import {
   resolve,
   ensureDir,
   logger,
-  parseYaml
+  parseYaml,
+  config
 } from "../deps.ts";
 
 interface Options {
@@ -34,6 +35,14 @@ class Action {
   async execute() {
     logger.info("Initializing...");
 
+    
+    console.log(config.get("use_transition"));
+    console.log(resolve(config.get("transition_path")!));
+    
+    
+
+    return
+
     await ensureDir(resolve("./", "assets"));
     await ensureDir(resolve("./", "assets", "database"));
     await ensureDir(resolve("./", "assets", "log"));
@@ -62,7 +71,7 @@ class Action {
           "",
           "# Specifies the file path to the MP4 video used as the intro. ",
           "# This path should point to a valid MP4 file that will be added at the start of the video if use_intro is set to true.",
-          "intro_path: ./assets/intro.mp4",
+          "intro_path: ./assets/media/intro.mp4",
           "",
           "# Specifies whether to use a transition effect between video clips. ",
           "# Set to true to enable transitions, or false to disable them.",
@@ -70,7 +79,7 @@ class Action {
           "",
           "# Defines the file path to the MP4 video used for the transition effect. ",
           "# This path should point to a valid MP4 file that will be used if use_transition is set to true.",
-          "transition_path: ./assets/transition.mp4",
+          "transition_path: ./assets/media/transition.mp4",
           "",
           "# Indicates whether to include an outro at the end of the video.",
           "# Set to true to include the outro, or false to omit it.",
@@ -78,7 +87,7 @@ class Action {
           "",
           "# Specifies the file path to the MP4 video used as the outro. ",
           "# This path should point to a valid MP4 file that will be appended to the end of the video if use_outtro is set to true.",
-          "outro_path: ./assets/outro.mp4",
+          "outro_path: ./assets/media/outro.mp4",
         ]
 
         await Deno.writeTextFile(pathFileConfig, content.join("\n"));

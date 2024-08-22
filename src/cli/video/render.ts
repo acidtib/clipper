@@ -5,7 +5,7 @@ import {
   ensureDir,
   logger,
   db,
-  FFmpeg
+  FFmpeg,
 } from "../../deps.ts";
 
 interface Options {

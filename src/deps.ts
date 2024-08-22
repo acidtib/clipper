@@ -11,6 +11,7 @@ export { createPentagon } from "https://deno.land/x/pentagon@v0.1.5/mod.ts";
 export { parse as parseYaml, stringify as stringifyYaml } from "jsr:@std/yaml";
 
 // libs
+export { config } from "./lib/config.ts";
 export { logger } from "./lib/logger.ts";
 export { db } from "./lib/db.ts"
 export { YtDlp } from "./lib/yt-dlp.ts"
