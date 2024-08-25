@@ -205,9 +205,6 @@ class FFmpeg {
    
     // Generate filter complex for video processing
     let filterIndex = 0;
-    let filterVideoIndex = 0;
-    let filterAudioIndex = 0;
-    let filterOverlayIndex = 0;
 
     let videoFilters = "";
     let audioFilters = "";
@@ -230,7 +227,7 @@ class FFmpeg {
 
       // add outro if enabled
       if (isOutro) {
-        videoFilters += `[${i}:v]setpts=PTS-STARTPTS,settb=AVTB,scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:-1:-1,setsar=1[v${i}];`;
+        videoFilters += `[${filterIndex}:v]setpts=PTS-STARTPTS,settb=AVTB,scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:-1:-1,setsar=1[v${i}];`;
       }
 
       // add transition if enabled
@@ -255,42 +252,9 @@ class FFmpeg {
         audioFilters += `[${filterIndex}:a]asetpts=PTS-STARTPTS[a${i}];`;
         filterOutputs += `[v${i}][a${i}]`;
       }
-      
+
       filterIndex += 1
     })
-
-    // for (let i = 0; i < adjustedFileList.length; i++) {
-      
-    //   // add clip
-    //   if (isClip && frameEnabled) {
-    //     // clip with frame
-    //     // if (i !== 0) {
-    //     //   filterIndex += 1;
-    //     // }
-
-    //     videoFilters += `[${filterVideoIndex}:v]scale=1709x961`
-    //     if (filterVideoIndex !== 0) filterVideoIndex += 1;
-    //     videoFilters += `[scaled_video${filterVideoIndex}];[${filterVideoIndex}:v]scale=1920:1080[overlay];[overlay][scaled_video${filterVideoIndex}]overlay=x=107:y=0[v${filterIndex}];`;
-    //     filterIndex += 1
-    //     // filterVideoIndex += 1;
-    //     // audioFilters += `[${filterVideoIndex}:a]asetpts=PTS-STARTPTS[a${filterVideoIndex}];`;
-    //     // filterOutputs += `[v${filterVideoIndex}][a${filterVideoIndex}]`;
-    //     // filterVideoIndex += 1;
-    //   } else if (isClip) {
-    //     // normal clip
-    //     videoFilters += `[${filterVideoIndex}:v]setpts=PTS-STARTPTS,settb=AVTB,scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:-1:-1,setsar=1,drawtext=fontfile=assets/fonts/dDegradasi.ttf:text='${(adjustedFileList[i] as unknown as { username: string }).username}':box=1:boxcolor=black@0.6:boxborderw=5:x=30:y=20:fontsize=50:fontcolor=#BEC581[v${filterVideoIndex}];`;
-    //   }
-
-    //   // if its a clip or transition, add the video and audio to the filter
-    //   if (isClip || isIntro || isOutro || isTransition) {
-    //     audioFilters += `[${filterVideoIndex}:a]asetpts=PTS-STARTPTS[a${filterVideoIndex}];`;
-    //     filterOutputs += `[v${filterVideoIndex}][a${filterVideoIndex}]`;
-
-    //     filterVideoIndex += 1;
-    //   }
-    // }
-
-    // return 0
 
     const filterComplex = `${videoFilters}${audioFilters}${filterOutputs}concat=n=${adjustedFileList.filter(item => item !== framePath).length}:v=1:a=1[outv][outa]`;
 
@@ -329,71 +293,6 @@ class FFmpeg {
 
     console.log(args.join(" "));
 
-    // return 0
-
-    // const filterList = adjustedFileList.map((f, i) => {
-    //   // check if its an intro
-    //   if (introEnabled && i === 0) {
-    //     return `[${i}:v]setpts=PTS-STARTPTS,settb=AVTB,scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:-1:-1,setsar=1,drawtext=fontfile=assets/fonts/CowboyHippiePro.otf:text='hello':x=(w-text_w)/2:y=700:fontsize=220:fontcolor=#78854A[v${i}];`;
-    //   }
-    //   // check if its an outro
-    //   if (outroEnabled && i === adjustedFileList.length - 1) {
-    //     return `[${i}:v]setpts=PTS-STARTPTS,settb=AVTB,scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:-1:-1,setsar=1[v${i}];`;
-    //   }
-    //   // check if its a transition
-    //   if (transitionEnabled && typeof f === "string" && f === transitionPath) {
-    //     return `[${i}:v]setpts=PTS-STARTPTS,settb=AVTB,scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:-1:-1,setsar=1[v${i}];`;
-    //   }
-
-    //   // normal clip
-    //   // return `[${i}:v]scale=1709x961[scaled_video${i}];[6:v]scale=1920:1080[overlay${i}];[${i}:v]setpts=PTS-STARTPTS,settb=AVTB,scale=1709x961:force_original_aspect_ratio=decrease,pad=1920:1080:-1:-1,setsar=1,drawtext=fontfile=assets/fonts/dDegradasi.ttf:text='${(f as unknown as { username: string }).username}':box=1:boxcolor=black@0.6:boxborderw=5:x=30:y=20:fontsize=50:fontcolor=#BEC581[v${i}];`;
-      
-    //   // if (i !== 0) {
-    //   //   filterStep = filterStep + 1
-    //   // }
-      
-    //   // const filter = `[${filterStep}:v]scale=1709x961[scaled_video];[${filterStep + 1}:v]scale=1920:1080[overlay];[overlay][scaled_video]overlay=x=107:y=0[v${i}];`
-    //   // filterStep += 1;
-    //   // return filter
-    // }).join("");
-
-    // const filterListAudio = adjustedFileList.map((f, i) => `[${i}:a]asetpts=PTS-STARTPTS[a${i}];`).join("");
-
-    // const filterListSource = adjustedFileList.map((f, i) => `[v${i}][a${i}]`).join("");
-
-    // const args = [
-    //   "-y",
-    //   ...adjustedFileList.flatMap(file => typeof file === "string" ? ["-i", file] : ["-i", (file as { file_path: string }).file_path]),
-    //   "-filter_complex", `${filterList}${filterListAudio}${filterListSource}concat=n=${adjustedFileList.length}:v=1:a=1[outv][outa]`,
-    //   "-map", "[outv]",
-    //   "-map", "[outa]",
-    //   "-force_key_frames", "expr:gte(t,n_forced/2)",
-      
-    //   // options for cpu
-    //   ...(this.device === "cpu" ? ["-c:v", "libx264", "-crf", this.atWhatQuality()] : []),
-
-    //   // options for gpu
-    //   ...(this.device === "gpu" ?
-    //     [
-    //       "-c:v", "h264_nvenc",
-    //       "-rc", "constqp",
-    //       "-qmin", "17", "-qmax", "51",
-    //       "-tune", "hq",
-    //       "-preset", "p7",
-    //       "-qp", this.atWhatQuality()
-    //     ] : []),
-  
-    //   "-bf", "2",
-    //   "-c:a", "aac",
-    //   "-q:a", "1",
-    //   "-ac", "2",
-    //   "-ar", "48000",
-    //   "-use_editlist", "0",
-    //   "-movflags", "+faststart",
-    //   "-r", "60",
-    //   savePath
-    // ];
-  
     this.debug && console.log(args.join(" "));
   
     const command = new Deno.Command("ffmpeg", {
