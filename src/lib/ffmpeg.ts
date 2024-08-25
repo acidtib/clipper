@@ -205,58 +205,62 @@ class FFmpeg {
    
     // Generate filter complex for video processing
     let filterIndex = 0;
+    let filterVideoIndex = 0;
+    let filterAudioIndex = 0;
+    let filterOverlayIndex = 0;
+
     let videoFilters = "";
     let audioFilters = "";
     let filterOutputs = "";
 
     for (let i = 0; i < adjustedFileList.length; i++) {
       const isClip = typeof adjustedFileList[i] === "object"
-      const hasIntro = introEnabled && adjustedFileList[i] === introPath;
-      const hasOutro = outroEnabled && adjustedFileList[i] === outroPath;
-      const isFrame = frameEnabled && adjustedFileList[i] === framePath;
-      const hasTransition = transitionEnabled && i > 0 && adjustedFileList[i] === transitionPath;
+      const isIntro = adjustedFileList[i] === introPath;
+      const isOutro = adjustedFileList[i] === outroPath;
+      const isFrame = adjustedFileList[i] === framePath;
+      const isTransition = adjustedFileList[i] === transitionPath;
 
       // if its frame go to next video
       if (isFrame) continue;
 
       // add intro if enabled
-      if (hasIntro && i === 0) {
-        videoFilters += `[${filterIndex}:v]setpts=PTS-STARTPTS,settb=AVTB,scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:-1:-1,setsar=1,drawtext=fontfile=assets/fonts/CowboyHippiePro.otf:text='hello':x=(w-text_w)/2:y=700:fontsize=220:fontcolor=#78854A[v${filterIndex}];`;
+      if (isIntro) {
+        videoFilters += `[${filterVideoIndex}:v]setpts=PTS-STARTPTS,settb=AVTB,scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:-1:-1,setsar=1,drawtext=fontfile=assets/fonts/CowboyHippiePro.otf:text='hello':x=(w-text_w)/2:y=700:fontsize=220:fontcolor=#78854A[v${filterVideoIndex}];`;
       }
 
       // add outro if enabled
-      if (hasOutro && i === adjustedFileList.length - 1) {
-        videoFilters += `[${filterIndex}:v]setpts=PTS-STARTPTS,settb=AVTB,scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:-1:-1,setsar=1[v${filterIndex}];`;
+      if (isOutro) {
+        videoFilters += `[${filterVideoIndex}:v]setpts=PTS-STARTPTS,settb=AVTB,scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:-1:-1,setsar=1[v${filterVideoIndex}];`;
       }
 
       // add transition if enabled
-      if (hasTransition) {
-        videoFilters += `[${filterIndex}:v]setpts=PTS-STARTPTS,settb=AVTB,scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:-1:-1,setsar=1[v${filterIndex}];`;
+      if (isTransition) {
+        videoFilters += `[${filterVideoIndex}:v]setpts=PTS-STARTPTS,settb=AVTB,scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:-1:-1,setsar=1[v${filterVideoIndex}];`;
       }
       
       // add clip
       if (isClip && frameEnabled) {
-        if (i !== 0) {
-          filterIndex += 1;
-        }
+        // clip with frame
+        // if (i !== 0) {
+        //   filterIndex += 1;
+        // }
 
-        videoFilters += `[${filterIndex}:v]scale=1709x961[scaled_video${filterIndex}];[${filterIndex + 1}:v]scale=1920:1080[overlay${filterIndex}];[overlay${filterIndex}][scaled_video${filterIndex}]overlay=x=107:y=0[v${filterIndex}];`;
-        audioFilters += `[${filterIndex}:a]asetpts=PTS-STARTPTS[a${filterIndex}];`;
-        filterOutputs += `[v${filterIndex}][a${filterIndex}]`;
-        filterIndex += 1;
+        videoFilters += `[${filterVideoIndex}:v]scale=1709x961[scaled_video${filterVideoIndex += 1}];[${filterVideoIndex}:v]scale=1920:1080[overlay];[overlay][scaled_video${filterVideoIndex}]overlay=x=107:y=0[v${filterIndex}];`;
+        filterIndex += 1
+        // audioFilters += `[${filterVideoIndex}:a]asetpts=PTS-STARTPTS[a${filterVideoIndex}];`;
+        // filterOutputs += `[v${filterVideoIndex}][a${filterVideoIndex}]`;
+        // filterVideoIndex += 1;
       } else if (isClip) {
         // normal clip
-        videoFilters += `[${filterIndex}:v]setpts=PTS-STARTPTS,settb=AVTB,scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:-1:-1,setsar=1,drawtext=fontfile=assets/fonts/dDegradasi.ttf:text='${(adjustedFileList[i] as unknown as { username: string }).username}':box=1:boxcolor=black@0.6:boxborderw=5:x=30:y=20:fontsize=50:fontcolor=#BEC581[v${filterIndex}];`;
-        audioFilters += `[${filterIndex}:a]asetpts=PTS-STARTPTS[a${filterIndex}];`;
-        filterOutputs += `[v${filterIndex}][a${filterIndex}]`;
-        filterIndex += 1;
+        videoFilters += `[${filterVideoIndex}:v]setpts=PTS-STARTPTS,settb=AVTB,scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:-1:-1,setsar=1,drawtext=fontfile=assets/fonts/dDegradasi.ttf:text='${(adjustedFileList[i] as unknown as { username: string }).username}':box=1:boxcolor=black@0.6:boxborderw=5:x=30:y=20:fontsize=50:fontcolor=#BEC581[v${filterVideoIndex}];`;
       }
 
       // if its a clip or transition, add the video and audio to the filter
-      if (hasTransition) {
-        videoFilters += `[${filterIndex}:a]asetpts=PTS-STARTPTS[a${filterIndex}];`;
-        filterOutputs += `[v${filterIndex}][a${filterIndex}]`;
-        filterIndex += 1;
+      if (isClip || isIntro || isOutro || isTransition) {
+        audioFilters += `[${filterVideoIndex}:a]asetpts=PTS-STARTPTS[a${filterVideoIndex}];`;
+        filterOutputs += `[v${filterVideoIndex}][a${filterVideoIndex}]`;
+
+        filterVideoIndex += 1;
       }
     }
 
@@ -298,6 +302,8 @@ class FFmpeg {
     ];
 
     console.log(args.join(" "));
+
+    // return 0
 
     // const filterList = adjustedFileList.map((f, i) => {
     //   // check if its an intro
