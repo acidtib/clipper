@@ -237,7 +237,7 @@ class FFmpeg {
 
       if (isClip && frameEnabled) {
         // clip with frame
-        videoFilters += `[${filterIndex}:v]scale=1709x961[scaled_video${i+1}];[${filterIndex += 1}:v]scale=1920:1080[overlay];[overlay][scaled_video${i+1}]overlay=x=107:y=0[v${i}];`
+        videoFilters += `[${filterIndex}:v]scale=1709x961[scaled_video${i+1}];[${filterIndex += 1}:v]scale=1920:1080,drawtext=fontfile=assets/fonts/dDegradasi.ttf:text='${(item as unknown as { username: string }).username.toUpperCase()}':x=103:y=h-th-45:fontsize=49:fontcolor=#BEC581[overlay];[overlay][scaled_video${i+1}]overlay=x=107:y=0[v${i}];`;
         audioFilters += `[${filterIndex - 1}:a]asetpts=PTS-STARTPTS[a${i}];`;
         filterOutputs += `[v${i}][a${i}]`;
       } else if (isClip) {
