@@ -237,12 +237,12 @@ class FFmpeg {
 
       if (isClip && frameEnabled) {
         // clip with frame
-        videoFilters += `[${filterIndex}:v]scale=1709x961[scaled_video${i+1}];[${filterIndex += 1}:v]scale=1920:1080,drawtext=fontfile=assets/fonts/dDegradasi.ttf:text='${(item as unknown as { username: string }).username.toUpperCase()}':x=103:y=h-th-45:fontsize=49:fontcolor=#BEC581[overlay];[overlay][scaled_video${i+1}]overlay=x=107:y=0[v${i}];`;
+        videoFilters += `[${filterIndex}:v]scale=1709x961[scaled_video${i+1}];[${filterIndex += 1}:v]scale=1920:1080,drawtext=fontfile=assets/fonts/GT-Sectra-Fine-Medium.ttf:text='${(item as unknown as { username: string }).username.toUpperCase()}':x=110:y=h-th-45:fontsize=49:fontcolor=#e7e7d7[overlay];[overlay][scaled_video${i+1}]overlay=x=107:y=0[v${i}];`;
         audioFilters += `[${filterIndex - 1}:a]asetpts=PTS-STARTPTS[a${i}];`;
         filterOutputs += `[v${i}][a${i}]`;
       } else if (isClip) {
         // normal clip
-        videoFilters += `[${filterIndex}:v]setpts=PTS-STARTPTS,settb=AVTB,scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:-1:-1,setsar=1,drawtext=fontfile=assets/fonts/dDegradasi.ttf:text='${(item as unknown as { username: string }).username}':box=1:boxcolor=black@0.6:boxborderw=5:x=30:y=20:fontsize=50:fontcolor=#BEC581[v${i}];`;
+        videoFilters += `[${filterIndex}:v]setpts=PTS-STARTPTS,settb=AVTB,scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:-1:-1,setsar=1,drawtext=fontfile=assets/fonts/GT-Sectra-Fine-Medium.ttf:text='${(item as unknown as { username: string }).username}':box=1:boxcolor=black@0.6:boxborderw=5:x=30:y=20:fontsize=50:fontcolor=#e7e7d7[v${i}];`;
         audioFilters += `[${filterIndex}:a]asetpts=PTS-STARTPTS[a${i}];`;
         filterOutputs += `[v${i}][a${i}]`;
       }
