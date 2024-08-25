@@ -176,98 +176,186 @@ class FFmpeg {
     const introEnabled = config.get<boolean>("use_intro");
     const outroEnabled = config.get<boolean>("use_outro");
     const transitionEnabled = config.get<boolean>("use_transition");
-    const frameEnabled = true // config.get<boolean>("use_frame");
+    const frameEnabled = config.get<boolean>("use_frame");
   
     const introPath = introEnabled ? resolve(config.get<string>("intro_path")!) : null;
     const outroPath = outroEnabled ? resolve(config.get<string>("outro_path")!) : null;
     const transitionPath = transitionEnabled ? resolve(config.get<string>("transition_path")!) : null;
     const framePath = resolve("C:\\Users\\acidtib\\code\\clipper\\assets\\media\\frame.png");
 
-
     // Build the adjusted file list
-  let adjustedFileList: string[] = [];
+    let adjustedFileList: string[] = [];
 
-  if (introEnabled) adjustedFileList.push(introPath!);
+    if (introEnabled) adjustedFileList.push(introPath!);
 
-  toConcat.forEach((clip, i) => {
-    adjustedFileList.push(clip.file_path);
-    if (frameEnabled) adjustedFileList.push(framePath);
+    toConcat.forEach((clip, i) => {
+      // add clip object to list
+      adjustedFileList.push(clip);
 
-    if (transitionEnabled && i < toConcat.length - 1) {
-      adjustedFileList.push(transitionPath!);
-    }
-  });
+      // add frame if enabled
+      if (frameEnabled) adjustedFileList.push(framePath);
 
-  if (outroEnabled) adjustedFileList.push(outroPath!);
+      // add transition if enabled
+      if (transitionEnabled && i < toConcat.length - 1) {
+        adjustedFileList.push(transitionPath!);
+      }
+    });
 
-  // Generate the filter_complex for video processing
-  let filterIndex = 0;
-  let videoFilters = "";
-  let audioFilters = "";
-  let filterOutputs = "";
-  let videoCount = 0; // Track the number of video inputs used
+    if (outroEnabled) adjustedFileList.push(outroPath!);
+   
+    // Generate filter complex for video processing
+    let filterIndex = 0;
+    let videoFilters = "";
+    let audioFilters = "";
+    let filterOutputs = "";
 
-  for (let i = 0; i < adjustedFileList.length; i++) {
-    const isFrame = frameEnabled && (i % 2 === 1);
-    const isTransition = transitionEnabled && (i % 3 === 2);
+    for (let i = 0; i < adjustedFileList.length; i++) {
+      console.log(adjustedFileList[i]);
 
-    if (isFrame || isTransition) {
-      continue; // Skip adding filters for frame or transition elements
-    }
+      const isFrame = frameEnabled && adjustedFileList[i] === framePath;
+      const isTransition = transitionEnabled && i > 0 && adjustedFileList[i] === transitionPath;
 
-    if (frameEnabled) {
-      videoFilters += `[${filterIndex}:v]scale=1709x961[scaled_video${videoCount}];[${filterIndex + 1}:v]scale=1920:1080[overlay${videoCount}];[overlay${videoCount}][scaled_video${videoCount}]overlay=x=107:y=0[v${videoCount}];`;
-      audioFilters += `[${filterIndex}:a]asetpts=PTS-STARTPTS[a${videoCount}];`; // Apply audio filter to the video only
-      filterIndex += 2; // Increment extra for the frame
-    } else {
-      videoFilters += `[${filterIndex}:v]scale=1920x1080,setsar=1[v${videoCount}];`;
-      audioFilters += `[${filterIndex}:a]asetpts=PTS-STARTPTS[a${videoCount}];`;
+      console.log(isFrame);
+      console.log(isTransition);
+
+      // if its frame go to next video
+      if (isFrame) {
+        continue;
+      }
+      // if (isFrame) {
+      //   videoFilters += `[${filterIndex - 1}:v]scale=1709x961[scaled_video${i-1}];[${filterIndex}:v]scale=1920:1080[overlay${i-1}];[overlay${i-1}][scaled_video${i-1}]overlay=x=107:y=0[v${i-1}];`;
+      //   filterIndex += 1;
+      // } else if (isTransition) {
+      //   videoFilters += `[${filterIndex}:v]setpts=PTS-STARTPTS,settb=AVTB,scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:-1:-1,setsar=1[v${i}];`;
+      //   filterIndex += 1;
+      // } else {
+      //   videoFilters += `[${i}:v]setpts=PTS-STARTPTS,settb=AVTB,scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:-1:-1,setsar=1,drawtext=fontfile=assets/fonts/dDegradasi.ttf:text='${(adjustedFileList[i] as unknown as { username: string }).username}':box=1:boxcolor=black@0.6:boxborderw=5:x=30:y=20:fontsize=50:fontcolor=#BEC581[v${i}];`
+      // }     
       filterIndex += 1;
+      
+      if (frameEnabled) {
+        videoFilters += `[${filterIndex}:v]scale=1709x961[scaled_video${i}];[${filterIndex + 1}:v]scale=1920:1080[overlay${i}];[overlay${i}][scaled_video${i}]overlay=x=107:y=0[v${i}];`;        
+      } else {
+        videoFilters += `[${i}:v]setpts=PTS-STARTPTS,settb=AVTB,scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:-1:-1,setsar=1,drawtext=fontfile=assets/fonts/dDegradasi.ttf:text='${(adjustedFileList[i] as unknown as { username: string }).username}':box=1:boxcolor=black@0.6:boxborderw=5:x=30:y=20:fontsize=50:fontcolor=#BEC581[v${i}];`
+      }
+      
+      if (!isFrame) {
+        audioFilters += `[${i}:a]asetpts=PTS-STARTPTS[a${i}];`;
+        filterOutputs += `[v${i}][a${i}]`;
+      }
     }
 
-    filterOutputs += `[v${videoCount}][a${videoCount}]`;
-    videoCount += 1;
-  }
+    console.log(adjustedFileList);
 
-  const filterComplex = `${videoFilters}${audioFilters}${filterOutputs}concat=n=${videoCount}:v=1:a=1[outv][outa]`;
+    const filterComplex = `${videoFilters}${audioFilters}${filterOutputs}concat=n=${toConcat.length}:v=1:a=1[outv][outa]`;
 
-  // Construct the FFmpeg arguments
-  const args = [
-    "-y",
-    ...adjustedFileList.flatMap(file => ["-i", file]),
-    "-filter_complex", filterComplex,
-    "-map", "[outv]",
-    "-map", "[outa]",
-    "-force_key_frames", "expr:gte(t,n_forced/2)",
+    const args = [
+      "-y",
+      ...adjustedFileList.flatMap(file => typeof file === "string" ? ["-i", file] : ["-i", (file as { file_path: string }).file_path]),
+      "-filter_complex", `"${filterComplex}"`,
+      "-map", "[outv]",
+      "-map", "[outa]",
+      "-force_key_frames", "'expr:gte(t,n_forced/2)'",
+      
+      // options for cpu
+      ...(this.device === "cpu" ? ["-c:v", "libx264", "-crf", this.atWhatQuality()] : []),
+
+      // options for gpu
+      ...(this.device === "gpu" ?
+        [
+          "-c:v", "h264_nvenc",
+          "-rc", "constqp",
+          "-qmin", "17", "-qmax", "51",
+          "-tune", "hq",
+          "-preset", "p7",
+          "-qp", this.atWhatQuality()
+        ] : []),
+  
+      "-bf", "2",
+      "-c:a", "aac",
+      "-q:a", "1",
+      "-ac", "2",
+      "-ar", "48000",
+      "-use_editlist", "0",
+      "-movflags", "+faststart",
+      "-r", "60",
+      savePath
+    ];
+
+    console.log(args.join(" "));
     
-    // Options for CPU encoding
-    ...(this.device === "cpu" ? ["-c:v", "libx264", "-crf", this.atWhatQuality()] : []),
 
-    // Options for GPU encoding
-    ...(this.device === "gpu" ? [
-      "-c:v", "h264_nvenc",
-      "-rc", "constqp",
-      "-qmin", "17", "-qmax", "51",
-      "-tune", "hq",
-      "-preset", "p7",
-      "-qp", this.atWhatQuality()
-    ] : []),
+    return Number(0)
 
-    "-bf", "2",
-    "-c:a", "aac",
-    "-q:a", "1",
-    "-ac", "2",
-    "-ar", "48000",
-    "-use_editlist", "0",
-    "-movflags", "+faststart",
-    "-r", "60",
-    savePath
-  ];
+    // const filterList = adjustedFileList.map((f, i) => {
+    //   // check if its an intro
+    //   if (introEnabled && i === 0) {
+    //     return `[${i}:v]setpts=PTS-STARTPTS,settb=AVTB,scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:-1:-1,setsar=1,drawtext=fontfile=assets/fonts/CowboyHippiePro.otf:text='hello':x=(w-text_w)/2:y=700:fontsize=220:fontcolor=#78854A[v${i}];`;
+    //   }
+    //   // check if its an outro
+    //   if (outroEnabled && i === adjustedFileList.length - 1) {
+    //     return `[${i}:v]setpts=PTS-STARTPTS,settb=AVTB,scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:-1:-1,setsar=1[v${i}];`;
+    //   }
+    //   // check if its a transition
+    //   if (transitionEnabled && typeof f === "string" && f === transitionPath) {
+    //     return `[${i}:v]setpts=PTS-STARTPTS,settb=AVTB,scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:-1:-1,setsar=1[v${i}];`;
+    //   }
+
+    //   // normal clip
+    //   // return `[${i}:v]scale=1709x961[scaled_video${i}];[6:v]scale=1920:1080[overlay${i}];[${i}:v]setpts=PTS-STARTPTS,settb=AVTB,scale=1709x961:force_original_aspect_ratio=decrease,pad=1920:1080:-1:-1,setsar=1,drawtext=fontfile=assets/fonts/dDegradasi.ttf:text='${(f as unknown as { username: string }).username}':box=1:boxcolor=black@0.6:boxborderw=5:x=30:y=20:fontsize=50:fontcolor=#BEC581[v${i}];`;
+      
+    //   // if (i !== 0) {
+    //   //   filterStep = filterStep + 1
+    //   // }
+      
+    //   // const filter = `[${filterStep}:v]scale=1709x961[scaled_video];[${filterStep + 1}:v]scale=1920:1080[overlay];[overlay][scaled_video]overlay=x=107:y=0[v${i}];`
+    //   // filterStep += 1;
+    //   // return filter
+    // }).join("");
+
+    // const filterListAudio = adjustedFileList.map((f, i) => `[${i}:a]asetpts=PTS-STARTPTS[a${i}];`).join("");
+
+    // const filterListSource = adjustedFileList.map((f, i) => `[v${i}][a${i}]`).join("");
+
+    // const args = [
+    //   "-y",
+    //   ...adjustedFileList.flatMap(file => typeof file === "string" ? ["-i", file] : ["-i", (file as { file_path: string }).file_path]),
+    //   "-filter_complex", `${filterList}${filterListAudio}${filterListSource}concat=n=${adjustedFileList.length}:v=1:a=1[outv][outa]`,
+    //   "-map", "[outv]",
+    //   "-map", "[outa]",
+    //   "-force_key_frames", "expr:gte(t,n_forced/2)",
+      
+    //   // options for cpu
+    //   ...(this.device === "cpu" ? ["-c:v", "libx264", "-crf", this.atWhatQuality()] : []),
+
+    //   // options for gpu
+    //   ...(this.device === "gpu" ?
+    //     [
+    //       "-c:v", "h264_nvenc",
+    //       "-rc", "constqp",
+    //       "-qmin", "17", "-qmax", "51",
+    //       "-tune", "hq",
+    //       "-preset", "p7",
+    //       "-qp", this.atWhatQuality()
+    //     ] : []),
+  
+    //   "-bf", "2",
+    //   "-c:a", "aac",
+    //   "-q:a", "1",
+    //   "-ac", "2",
+    //   "-ar", "48000",
+    //   "-use_editlist", "0",
+    //   "-movflags", "+faststart",
+    //   "-r", "60",
+    //   savePath
+    // ];
   
     this.debug && console.log(args.join(" "));
-    
-    // Execute the FFmpeg command
-    const command = new Deno.Command("ffmpeg", { args });
+  
+    const command = new Deno.Command("ffmpeg", {
+      args: args,
+    });
+  
     const { code, stdout, stderr } = await command.output();
   
     this.debug && logger.warn(colors.bold.green(`[DEBUG:] ${colors.bold.yellow.underline(savePath)}`), new TextDecoder().decode(stdout));
