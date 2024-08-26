@@ -5,7 +5,6 @@ import {
   ensureDir,
   logger,
   parseYaml,
-  config
 } from "../deps.ts";
 
 interface Options {
@@ -35,14 +34,6 @@ class Action {
   async execute() {
     logger.info("Initializing...");
 
-    
-    console.log(config.get("use_transition"));
-    console.log(resolve(config.get("transition_path")!));
-    
-    
-
-    return
-
     await ensureDir(resolve("./", "assets"));
     await ensureDir(resolve("./", "assets", "database"));
     await ensureDir(resolve("./", "assets", "log"));
@@ -64,6 +55,9 @@ class Action {
           "# Determines whether to include a frame around the video.",
           "# Set to true to enable the frame feature, or false to disable it.",
           "use_frame: false",
+          "",
+          "use_platform_icon: false",
+          "platform_icon_path: ./assets/media/icon_twitch.png",
           "",
           "# Indicates whether to include an intro at the beginning of the video. ",
           "# Set to true to include the intro, or false to omit it.",
