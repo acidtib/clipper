@@ -169,7 +169,7 @@ class FFmpeg {
     const outroEnabled = config.get<boolean>("use_outro");
     const transitionEnabled = config.get<boolean>("use_transition");
     const frameEnabled = config.get<boolean>("use_frame");
-    const plarformIconEnabled = config.get<boolean>("use_platform_icon");
+    const platformIconEnabled = config.get<boolean>("use_platform_icon");
   
     const introPath = introEnabled ? resolve(config.get<string>("intro_path")!) : null;
     const outroPath = outroEnabled ? resolve(config.get<string>("outro_path")!) : null;
@@ -191,7 +191,7 @@ class FFmpeg {
         adjustedFileList.push(framePath);
       }
 
-      if (plarformIconEnabled) adjustedFileList.push(iconTwitchPath);
+      if (platformIconEnabled) adjustedFileList.push(iconTwitchPath);
 
       // add transition if enabled
       if (transitionEnabled && i < toConcat.length - 1) {
@@ -233,12 +233,21 @@ class FFmpeg {
 
       if (isClip && frameEnabled) {
         // clip with frame
-        videoFilters += `[${filterIndex}:v]scale=1709x961[scaled_video${i+1}];[${filterIndex += 1}:v]scale=1920:1080,drawtext=fontfile=assets/fonts/GT-Sectra-Fine-Medium.ttf:text='${(item as unknown as { username: string }).username.toUpperCase()}':x=110:y=h-th-45:fontsize=49:fontcolor=#e7e7d7[overlay];[overlay][scaled_video${i+1}]overlay=x=107:y=0[v${i}];`;
+        videoFilters += `[${filterIndex}:v]scale=1709x961[scaled_video${i+1}];[${filterIndex += 1}:v]scale=1920:1080,drawtext=fontfile=assets/fonts/GT-Sectra-Fine-Medium.ttf:text='${(item as unknown as { username: string }).username.toUpperCase()}'`
+
         audioFilters += `[${filterIndex - 1}:a]asetpts=PTS-STARTPTS[a${i}];`;
+
+        if (platformIconEnabled) {
+          videoFilters += `:x=170:y=h-th-45:fontsize=49:fontcolor=#e7e7d7[overlay];[overlay][scaled_video${i+1}]overlay=x=107:y=0[v${i}];`;
+          videoFilters += `[v${i}][${filterIndex += 1}:v]overlay=x=108:y=main_h-overlay_h-35[v${i}];`;
+        } else {
+          videoFilters += `:x=110:y=h-th-45:fontsize=49:fontcolor=#e7e7d7[overlay];[overlay][scaled_video${i+1}]overlay=x=107:y=0[v${i}];`;
+        }
+        
         filterOutputs += `[v${i}][a${i}]`;
       } else if (isClip) {
         // normal clip
-        if (plarformIconEnabled) {
+        if (platformIconEnabled) {
           videoFilters += `[${filterIndex}:v]setpts=PTS-STARTPTS,settb=AVTB,scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:-1:-1,setsar=1,drawtext=fontfile=assets/fonts/GT-Sectra-Fine-Medium.ttf:text='${(item as unknown as { username: string }).username}':box=1:boxcolor=black@0.6:boxborderw=5:x=100:y=24:fontsize=50:fontcolor=#e7e7d7[v${i}];[v${i}][${filterIndex += 1}:v]overlay=x=30:y=20[v${i}];`;
           audioFilters += `[${filterIndex - 1}:a]asetpts=PTS-STARTPTS[a${i}];`;
           filterOutputs += `[v${i}][a${i}]`;
