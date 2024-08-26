@@ -5,7 +5,7 @@ const command = new Command()
 
   .globalOption("--device <device:string>", "Device to use", { default: "cpu" })
   .globalOption("--quality <quality:string>", "Quality to use", { default: "high" })
-  .globalOption("--overwrite", "Overwrite existing files.", { default: false })
+  .globalOption("--force", "Force action.", { default: false })
 
   .action(() => {
     command.showHelp();

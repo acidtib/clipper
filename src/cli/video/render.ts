@@ -10,7 +10,7 @@ import {
 
 interface Options {
   debug?: boolean;
-  overwrite: boolean;
+  force: boolean;
   device: string;
   quality: string;
 }
@@ -71,7 +71,7 @@ export default new Command()
   
       // check that video id exists
       if (video) {
-        if (this.options.overwrite) {
+        if (this.options.force) {
           logger.info(
             `${colors.bold.yellow.underline(this.id)} / Overwriting files.`,
           );
@@ -86,7 +86,7 @@ export default new Command()
   
         } else {
           logger.info(
-            `${colors.bold.yellow.underline(this.id)} / Video id already exists. Use --overwrite to overwrite it.`,
+            `${colors.bold.yellow.underline(this.id)} / Video id already exists. Use --force to overwrite it.`,
           );
           return;
         }

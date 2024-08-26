@@ -12,7 +12,7 @@ import {
 
 interface Options {
   debug?: boolean;
-  overwrite: boolean;
+  force: boolean;
   device: string;
   quality: string;
 }
@@ -78,7 +78,7 @@ class Action {
     
     if (video) {
       // video exists
-      if (this.options.overwrite) {
+      if (this.options.force) {
         logger.info(
           `${colors.bold.yellow.underline(this.id)} / Overwriting files.`,
         );
@@ -98,7 +98,7 @@ class Action {
 
       } else {
         logger.info(
-          `${colors.bold.yellow.underline(this.id)} / Video id already exists. Use --overwrite to overwrite it.`,
+          `${colors.bold.yellow.underline(this.id)} / Video id already exists. Use --force to overwrite it.`,
         );
         return;
       }
