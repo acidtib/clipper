@@ -163,25 +163,19 @@ class FFmpeg {
     return Number(new TextDecoder().decode(stdout));
   }
 
-
-  // ffmpeg -i video1.mp4 -i video2.mp4 -i video3.mp4 -filter_complex "[0:v][0:a][1:v][1:a][2:v][2:a]concat=n=3:v=1:a=1[outv][outa]" -map "[outv]" -map "[outa]" output.mp4 
-  // ffmpeg 
-  //   -i C:\\Users\\acidtib\\code\\clipper\\results\\1\\clips\\2_whothyfawk_busywildplumberyoudontsay-9nojqsw098-i1p_y.mp4 
-  //   -i C:\\Users\\acidtib\\code\\clipper\\results\\1\\clips\\1_whityyy_modernsucculentmonkeysquadgoals-cgunmp0lhnex_yzh.mp4 
-  //   -filter_complex "[0:v]setpts=PTS-STARTPTS,scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:-1:-1,setsar=1[v0]; [0:a]asetpts=PTS-STARTPTS[a0]; [1:v]setpts=PTS-STARTPTS,scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:-1:-1,setsar=1[v1]; [1:a]asetpts=PTS-STARTPTS[a1]; [v0][a0][v1][a1]concat=n=2:v=1:a=1[outv][outa]" 
-  //   -map "[outv]" -map "[outa]" 
-  //   -force_key_frames 'expr:gte(t,n_forced/2)' -c:v libx264 -crf 18 -bf 2 -c:a aac -q:a 1 -ac 2 -ar 48000 -use_editlist 0 -movflags +faststart -r 60 output.mp4  
   async concat(toConcat: any[], savePath: string): Promise<number> {
 
     const introEnabled = config.get<boolean>("use_intro");
     const outroEnabled = config.get<boolean>("use_outro");
     const transitionEnabled = config.get<boolean>("use_transition");
     const frameEnabled = config.get<boolean>("use_frame");
+    const plarformIconEnabled = config.get<boolean>("use_platform_icon");
   
     const introPath = introEnabled ? resolve(config.get<string>("intro_path")!) : null;
     const outroPath = outroEnabled ? resolve(config.get<string>("outro_path")!) : null;
     const transitionPath = transitionEnabled ? resolve(config.get<string>("transition_path")!) : null;
-    const framePath = resolve("C:\\Users\\acidtib\\code\\clipper\\assets\\media\\frame.png");
+    const framePath = resolve(config.get<string>("frame_path")!);
+    const iconTwitchPath = resolve(config.get<string>("platform_icon_path")!);
 
     // Build the adjusted file list
     let adjustedFileList: string[] = [];
@@ -192,8 +186,12 @@ class FFmpeg {
       // add clip object to list
       adjustedFileList.push(clip);
 
-      // add frame if enabled
-      if (frameEnabled) adjustedFileList.push(framePath);
+      if (frameEnabled) {
+        // add frame
+        adjustedFileList.push(framePath);
+      }
+
+      if (plarformIconEnabled) adjustedFileList.push(iconTwitchPath);
 
       // add transition if enabled
       if (transitionEnabled && i < toConcat.length - 1) {
@@ -210,15 +208,13 @@ class FFmpeg {
     let audioFilters = "";
     let filterOutputs = "";
 
-    adjustedFileList.filter(item => item !== framePath).forEach((item, i) => {
+    const adjustedForFilters = adjustedFileList.filter(item => item !== framePath).filter(item => item !== iconTwitchPath)
+
+    adjustedForFilters.forEach((item, i) => {
       const isClip = typeof item === "object"
       const isIntro = item === introPath;
       const isOutro = item === outroPath;
-      const isFrame = item === framePath;
       const isTransition = item === transitionPath;
-
-      // if its frame go to next video
-      if (isFrame) return;
 
       // add intro if enabled
       if (isIntro) {
@@ -242,9 +238,16 @@ class FFmpeg {
         filterOutputs += `[v${i}][a${i}]`;
       } else if (isClip) {
         // normal clip
-        videoFilters += `[${filterIndex}:v]setpts=PTS-STARTPTS,settb=AVTB,scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:-1:-1,setsar=1,drawtext=fontfile=assets/fonts/GT-Sectra-Fine-Medium.ttf:text='${(item as unknown as { username: string }).username}':box=1:boxcolor=black@0.6:boxborderw=5:x=30:y=20:fontsize=50:fontcolor=#e7e7d7[v${i}];`;
-        audioFilters += `[${filterIndex}:a]asetpts=PTS-STARTPTS[a${i}];`;
-        filterOutputs += `[v${i}][a${i}]`;
+        if (plarformIconEnabled) {
+          videoFilters += `[${filterIndex}:v]setpts=PTS-STARTPTS,settb=AVTB,scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:-1:-1,setsar=1,drawtext=fontfile=assets/fonts/GT-Sectra-Fine-Medium.ttf:text='${(item as unknown as { username: string }).username}':box=1:boxcolor=black@0.6:boxborderw=5:x=100:y=24:fontsize=50:fontcolor=#e7e7d7[v${i}];[v${i}][${filterIndex += 1}:v]overlay=x=30:y=20[v${i}];`;
+          audioFilters += `[${filterIndex - 1}:a]asetpts=PTS-STARTPTS[a${i}];`;
+          filterOutputs += `[v${i}][a${i}]`;
+
+        } else {
+          videoFilters += `[${filterIndex}:v]setpts=PTS-STARTPTS,settb=AVTB,scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:-1:-1,setsar=1,drawtext=fontfile=assets/fonts/GT-Sectra-Fine-Medium.ttf:text='${(item as unknown as { username: string }).username}':box=1:boxcolor=black@0.6:boxborderw=5:x=30:y=20:fontsize=50:fontcolor=#e7e7d7[v${i}];`;
+          audioFilters += `[${filterIndex}:a]asetpts=PTS-STARTPTS[a${i}];`;
+          filterOutputs += `[v${i}][a${i}]`;
+        }
       }
 
       // if its a clip or transition, add the video and audio to the filter
@@ -256,7 +259,7 @@ class FFmpeg {
       filterIndex += 1
     })
 
-    const filterComplex = `${videoFilters}${audioFilters}${filterOutputs}concat=n=${adjustedFileList.filter(item => item !== framePath).length}:v=1:a=1[outv][outa]`;
+    const filterComplex = `${videoFilters}${audioFilters}${filterOutputs}concat=n=${adjustedForFilters.length}:v=1:a=1[outv][outa]`;
 
     const args = [
       "-y",
