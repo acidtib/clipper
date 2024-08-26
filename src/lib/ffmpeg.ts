@@ -190,7 +190,7 @@ class FFmpeg {
         // add frame
         adjustedFileList.push(framePath);
       }
-
+      
       if (platformIconEnabled) adjustedFileList.push(iconTwitchPath);
 
       // add transition if enabled
