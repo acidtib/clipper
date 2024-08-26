@@ -1,5 +1,13 @@
 {
   "tasks": {
-    "run": "deno run --allow-read --allow-write --allow-run --unstable-kv src/mod.ts"
+    "run": "deno run --allow-read --allow-write --allow-run --unstable-kv src/mod.ts",
+
+    "build": "deno compile --allow-read --allow-write --allow-run --unstable-kv --output bin/clipper src/mod.ts",
+    "build:all": "deno task build:x86_64-unknown-linux-gnu && deno task build:aarch64-unknown-linux-gnu && deno task build:x86_64-pc-windows-msvc && deno task build:x86_64-apple-darwin && deno task build:aarch64-apple-darwin",
+    "build:x86_64-unknown-linux-gnu": "deno compile --allow-read --allow-write --allow-run --unstable-kv --target x86_64-unknown-linux-gnu --output bin/clipper-x86_64-unknown-linux-gnu src/mod.ts",
+    "build:aarch64-unknown-linux-gnu": "deno compile --allow-read --allow-write --allow-run --unstable-kv --target aarch64-unknown-linux-gnu --output bin/clipper-aarch64-unknown-linux-gnu src/mod.ts",
+    "build:x86_64-pc-windows-msvc": "deno compile --allow-read --allow-write --allow-run --unstable-kv --target x86_64-pc-windows-msvc --output bin/clipper src/mod.ts",
+    "build:x86_64-apple-darwin": "deno compile --allow-read --allow-write --allow-run --unstable-kv --target x86_64-apple-darwin --output bin/clipper-x86_64-apple-darwin src/mod.ts",
+    "build:aarch64-apple-darwin": "deno compile --allow-read --allow-write --allow-run --unstable-kv --target aarch64-apple-darwin --output bin/clipper-aarch64-apple-darwin src/mod.ts"
   }
 }
