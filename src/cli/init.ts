@@ -55,6 +55,7 @@ class Action {
           "# Determines whether to include a frame around the video.",
           "# Set to true to enable the frame feature, or false to disable it.",
           "use_frame: false",
+          "frame_path: ./assets/media/frame.png",
           "",
           "use_platform_icon: false",
           "platform_icon_path: ./assets/media/icon_twitch.png",
