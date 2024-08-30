@@ -2,8 +2,9 @@ import {
   resolve,
   ensureDir,
   z,
-  createPentagon
 } from "../deps.ts";
+
+import { kvdex, model, collection } from "jsr:@olli/kvdex"
 
 const dbDir = resolve("./", "assets", "database"); 
 const dbPath = resolve(dbDir, "kv.sqlite3"); 
@@ -14,44 +15,63 @@ await ensureDir(dbDir);
 const kv = await Deno.openKv(dbPath);
 
 // models
-const Video = z.object({
+type Video = z.infer<typeof VideoModel>
+type Streamer = z.infer<typeof StreamerModel>
+
+const VideoModel = z.object({
   id: z.string().describe("primary"),
   createdAt: z.date(),
   step: z.string(),
   output: z.string().optional(),
 });
 
-const Clip = z.object({
+const StreamerModel = z.object({
   id: z.string().describe("primary"),
-  createdAt: z.date(),
   username: z.string(),
-  source: z.string(),
-  source_url: z.string(),
-  duration: z.number(),
-  order: z.number(),
-  file_path: z.string().optional(),
+  platform: z.string(),
+  platform_id: z.string(),
+})
 
-  trim_start: z.number().optional(),
-  trim_end: z.number().optional(),
-  trim_action: z.boolean().optional(),
+// const Clip = z.object({
+//   id: z.string().describe("primary"),
+//   createdAt: z.date(),
+//   username: z.string(),
+//   source: z.string(),
+//   source_url: z.string(),
+//   duration: z.number(),
+//   order: z.number(),
+//   file_path: z.string().optional(),
 
-  videoId: z.string(),
-});
+//   trim_start: z.number().optional(),
+//   trim_end: z.number().optional(),
+//   trim_action: z.boolean().optional(),
 
-// schema
-const db = createPentagon(kv, {
-  videos: {
-    schema: Video,
-    relations: {
-      clips: ["clips", [Clip], "id", "videoId"],
-    }
-  },
-  clips: {
-    schema: Clip,
-    relations: {
-      video: ["videos", Video, "videoId", "id"],
-    },
-  }
-});
+//   videoId: z.string(),
+// });
 
-export { db, Video, Clip }
+// // schema
+// const db = createPentagon(kv, {
+//   videos: {
+//     schema: Video,
+//     relations: {
+//       clips: ["clips", [Clip], "id", "videoId"],
+//     }
+//   },
+//   clips: {
+//     schema: Clip,
+//     relations: {
+//       video: ["videos", Video, "videoId", "id"],
+//     },
+//   }
+// });
+
+const db = kvdex(kv, {
+  videos: collection(VideoModel, {
+    idGenerator: (video) => video.id
+  }),
+  streamers: collection(StreamerModel, {
+    indices: {}
+  }),
+})
+
+export { db }

@@ -66,9 +66,7 @@ class Action {
 
   async execute() {
     // check that video id exists
-    const video = await db.videos.findFirst({
-      where: { id: this.id }
-    });
+    const video = await db.videos.find(this.id)
 
     this.options.debug &&
       logger.warn(
@@ -76,6 +74,8 @@ class Action {
         video,
       );
     
+    console.log(video);
+      
     if (video) {
       // video exists
       if (this.options.force) {
@@ -84,17 +84,16 @@ class Action {
         );
 
         // update step value
-        await db.videos.update({
-          where: { id: this.id },
-          data: {
-            step: "download",
-          },
-        })
+        await db.videos.update(
+          this.id,
+          { step: "download" },
+          { strategy: "merge" },
+        )
 
         // clean up current clips from db
-        await db.clips.deleteMany({
-          where: { videoId: this.id }
-        });
+        // await db.clips.deleteMany({
+        //   where: { videoId: this.id }
+        // });
 
       } else {
         logger.info(
@@ -107,14 +106,20 @@ class Action {
       logger.info(`${colors.bold.yellow.underline(this.id)} / New video id.`);
 
       // create new video
-      await db.videos.create({
-        data: {
-          id: this.id,
-          createdAt: new Date(),
-          step: "download",
-        },
-      });
+      const newVideoResult = await db.videos.add({
+        id: this.id,
+        createdAt: new Date(),
+        step: "download",
+      })
+
+      if (!newVideoResult.ok) {
+        logger.error(
+          `${colors.bold.yellow.underline(this.id)} / Failed to create new video.`,
+        );
+        return;
+      }
     }
+
 
     let content;
     try {
@@ -140,6 +145,35 @@ class Action {
       logger.info(`${colors.bold.yellow.underline(this.id)} / No clips to download.`);
       return;
     }
+
+    // process the streamers
+    // for (const line of lines) {
+    //   const clipData = this.parseLine(line);
+
+    //   const { clipId, username } = this.parseClipUrl(clipData.url);
+
+    //   console.log(clipId, username);
+      
+    // }
+
+    const streamerUsernames = lines.map(async (line) => {
+      const clipData = this.parseLine(line);
+      const { username, platform } = this.parseClipUrl(clipData.url);
+
+      const findStreamer = await db.streamers.find(this.id)
+
+      return { 
+        username, 
+        platform,
+        platform_id: "twitch_id"
+      };
+    }) //.filter((username, index, array) => array.indexOf(username) === index);
+
+    console.log(streamerUsernames);
+    
+    
+
+    return
     
     // download each clip and normalize the audio
     await Promise.all(lines.map(async (line, index) => {
@@ -273,6 +307,8 @@ class Action {
       }
     }));
 
+    return
+
     logger.info(
       `${colors.bold.yellow.underline(this.id)} / Done downloading ${this.clipList.length} clips`,
     );
@@ -284,15 +320,17 @@ class Action {
     const url = new URL(clipUrl);
     let username;
     let clipId;
+    let platform;
 
     if (url.host.includes("twitch.tv")) {
       // Split the pathname to extract username and clip ID
       const segments = url.pathname.split("/");
       username = segments[1].toLowerCase();
       clipId = segments[3].toLowerCase();
+      platform = "twitch";
     }
 
-    return { username, clipId };
+    return { username, clipId, platform };
   }
 
   // parse the line data
