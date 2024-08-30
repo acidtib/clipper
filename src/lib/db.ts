@@ -2,6 +2,7 @@ import {
   resolve,
   ensureDir,
   z,
+  ulid
 } from "../deps.ts";
 
 import { kvdex, model, collection } from "jsr:@olli/kvdex"
@@ -17,60 +18,43 @@ const kv = await Deno.openKv(dbPath);
 // models
 type Video = z.infer<typeof VideoModel>
 type Streamer = z.infer<typeof StreamerModel>
+type Clip = z.infer<typeof ClipModel>
 
 const VideoModel = z.object({
-  id: z.string().describe("primary"),
+  video_id: z.string().describe("primary"),
   createdAt: z.date(),
   step: z.string(),
   output: z.string().optional(),
 });
 
 const StreamerModel = z.object({
-  id: z.string().describe("primary"),
   username: z.string(),
   platform: z.string(),
   platform_id: z.string(),
 })
 
-// const Clip = z.object({
-//   id: z.string().describe("primary"),
-//   createdAt: z.date(),
-//   username: z.string(),
-//   source: z.string(),
-//   source_url: z.string(),
-//   duration: z.number(),
-//   order: z.number(),
-//   file_path: z.string().optional(),
+const ClipModel = z.object({
+  clip_id: z.string().describe("primary"),
+  createdAt: z.date(),
+  source: z.string(),
+  source_url: z.string(),
+  duration: z.number(),
+  order: z.number(),
+  file_path: z.string().optional(),
+  trim_start: z.number().optional(),
+  trim_end: z.number().optional(),
+  trim_action: z.boolean().optional(),
+  videoId: z.string(),
+});
 
-//   trim_start: z.number().optional(),
-//   trim_end: z.number().optional(),
-//   trim_action: z.boolean().optional(),
-
-//   videoId: z.string(),
-// });
-
-// // schema
-// const db = createPentagon(kv, {
-//   videos: {
-//     schema: Video,
-//     relations: {
-//       clips: ["clips", [Clip], "id", "videoId"],
-//     }
-//   },
-//   clips: {
-//     schema: Clip,
-//     relations: {
-//       video: ["videos", Video, "videoId", "id"],
-//     },
-//   }
-// });
-
+// schema
 const db = kvdex(kv, {
   videos: collection(VideoModel, {
-    idGenerator: (video) => video.id
+    idGenerator: (video) => video.video_id
   }),
-  streamers: collection(StreamerModel, {
-    indices: {}
+  streamers: collection(StreamerModel),
+  clips: collection(ClipModel, {
+    idGenerator: (clip) => clip.clip_id
   }),
 })
 

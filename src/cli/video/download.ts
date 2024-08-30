@@ -107,7 +107,7 @@ class Action {
 
       // create new video
       const newVideoResult = await db.videos.add({
-        id: this.id,
+        video_id: this.id,
         createdAt: new Date(),
         step: "download",
       })
@@ -146,35 +146,28 @@ class Action {
       return;
     }
 
-    // process the streamers
-    // for (const line of lines) {
-    //   const clipData = this.parseLine(line);
-
-    //   const { clipId, username } = this.parseClipUrl(clipData.url);
-
-    //   console.log(clipId, username);
-      
-    // }
-
-    const streamerUsernames = lines.map(async (line) => {
+    // process the streamers and add them to the db
+    let streamersList = [];
+    // parse line and get streamer data
+    for (const line of lines) {
       const clipData = this.parseLine(line);
       const { username, platform } = this.parseClipUrl(clipData.url);
+      streamersList.push({ username: username!, platform: platform!, platform_id: "twitch_id" });
+    }
 
-      const findStreamer = await db.streamers.find(this.id)
-
-      return { 
-        username, 
-        platform,
-        platform_id: "twitch_id"
-      };
-    }) //.filter((username, index, array) => array.indexOf(username) === index);
-
-    console.log(streamerUsernames);
+    // add streamers to db
+    Array.from(new Map(streamersList.map((s) => [`${s.username}_${s.platform}`, s])).values()).forEach(async item => {
+      // check if streamer exists
+      const result = await db.streamers.getOne({
+        filter: (doc) => doc.value.username === item.username && doc.value.platform === item.platform,
+      })
+      if (!result) {
+        // add streamer
+        await db.streamers.add(item)
+      }
+    });
     
-    
 
-    return
-    
     // download each clip and normalize the audio
     await Promise.all(lines.map(async (line, index) => {
       let clipData = this.parseLine(line);
@@ -182,11 +175,14 @@ class Action {
       logger.info(
         `${colors.bold.yellow.underline(this.id)} / Working on ${clipData.url}`,
       );
-      this.options.debug &&
-        logger.warn(colors.bold.green(`[DEBUG:]`), clipData);
+      this.options.debug && logger.warn(colors.bold.green(`[DEBUG:]`), clipData);
       this.clipList.push(clipData);
 
-      const { clipId, username } = this.parseClipUrl(clipData.url);
+      const { clipId, username, platform } = this.parseClipUrl(clipData.url);
+
+      const streamer = await db.streamers.getOne({
+        filter: (doc) => doc.value.username === username && doc.value.platform === platform,
+      })
 
       const rawPath = resolve(
         this.basePath,
@@ -252,52 +248,57 @@ class Action {
         sourcePath,
         resolve(this.basePath, `${index}_${username}_${clipId}.mp4`),
       );
-
-      const findClip = await db.clips.findFirst({
-        where: {
-          id: clipId,
-          videoId: this.id
-        },
+      
+      const findClip = await db.clips.getOne({
+        filter: (doc) => doc.id === clipId && doc.value.videoId === this.id,
       })
+      console.log(findClip);
+      
+      // const findClip = await db.clips.findFirst({
+      //   where: {
+      //     id: clipId,
+      //     videoId: this.id
+      //   },
+      // })
 
-      if (findClip) {
-        // update the clip in the db
-        await db.clips.update({
-          where: {
-            id: clipId,
-            videoId: this.id
-          },
-          data: {
-            username: username!,
-            source: "twitch",
-            source_url: clipData.url,
-            duration: clipDuration,
-            file_path: resolve(this.basePath, `${index}_${username}_${clipId}.mp4`),
-            trim_start: startTime,
-            trim_end: endTime,
-            trim_action: trimClip,
-          },
-        })
+      // if (findClip) {
+      //   // update the clip in the db
+      //   await db.clips.update({
+      //     where: {
+      //       id: clipId,
+      //       videoId: this.id
+      //     },
+      //     data: {
+      //       username: username!,
+      //       source: "twitch",
+      //       source_url: clipData.url,
+      //       duration: clipDuration,
+      //       file_path: resolve(this.basePath, `${index}_${username}_${clipId}.mp4`),
+      //       trim_start: startTime,
+      //       trim_end: endTime,
+      //       trim_action: trimClip,
+      //     },
+      //   })
         
-      } else {
-        // add the clip to the db
-        await db.clips.create({
-          data: {
-            id: clipId!,
-            videoId: this.id,
-            order: index,
-            username: username!,
-            source: "twitch",
-            source_url: clipData.url,
-            duration: clipDuration,
-            file_path: resolve(this.basePath, `${index}_${username}_${clipId}.mp4`),
-            trim_start: startTime,
-            trim_end: endTime,
-            trim_action: trimClip,
-            createdAt: new Date(),
-          },
-        });
-      }
+      // } else {
+      //   // add the clip to the db
+      //   await db.clips.create({
+      //     data: {
+      //       id: clipId!,
+      //       videoId: this.id,
+      //       order: index,
+      //       username: username!,
+      //       source: "twitch",
+      //       source_url: clipData.url,
+      //       duration: clipDuration,
+      //       file_path: resolve(this.basePath, `${index}_${username}_${clipId}.mp4`),
+      //       trim_start: startTime,
+      //       trim_end: endTime,
+      //       trim_action: trimClip,
+      //       createdAt: new Date(),
+      //     },
+      //   });
+      // }
 
       // remove the temp files
       for (const file of [rawPath, sourcePath]) {
@@ -306,8 +307,6 @@ class Action {
         }
       }
     }));
-
-    return
 
     logger.info(
       `${colors.bold.yellow.underline(this.id)} / Done downloading ${this.clipList.length} clips`,
