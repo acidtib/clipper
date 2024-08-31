@@ -10,6 +10,8 @@ import {
   db,
 } from "../../deps.ts";
 
+import ProgressBar from "https://deno.land/x/progress@v1.4.9/mod.ts";
+
 interface Options {
   debug?: boolean;
   force: boolean;
@@ -166,12 +168,21 @@ class Action {
     
 
     // download each clip and normalize the audio
+    const total = lines.length;
+    let completed = 0;
+    const progress = new ProgressBar({
+      total,
+      display: "Downloading Clips: :percent [:bar] :time :completed/:total",
+    });
+
+    await progress.render(0)
+
     await Promise.all(lines.map(async (line, index) => {
       let clipData = this.parseLine(line);
       let trimClip = false;
-      logger.info(
-        `${colors.bold.yellow.underline(this.id)} / Working on ${clipData.url}`,
-      );
+      // logger.info(
+      //   `${colors.bold.yellow.underline(this.id)} / Working on ${clipData.url}`,
+      // );
       this.options.debug && logger.warn(colors.bold.green(`[DEBUG:]`), clipData);
       this.clipList.push(clipData);
 
@@ -290,7 +301,13 @@ class Action {
           Deno.removeSync(file);
         }
       }
+
+      await progress.console(`Downloaded / ${streamer!.value.username} ${clipId}`);
+      await progress.render(completed++);
+      
     }));
+
+    await progress.render(lines.length);
 
     logger.info(
       `${colors.bold.yellow.underline(this.id)} / Done downloading ${this.clipList.length} clips`,

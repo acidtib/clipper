@@ -101,5 +101,16 @@ clipper video render <id>
 clipper video info <id>
 ```
 
+#### Other Commands
+**List Videos**: List all videos in the local database:
+```bash
+clipper video list
+```
+
+**Get Twitch Clip**: Fetch clips from list of Twitch users, urls are added to `to_download.txt`
+```bash
+clipper twitch get chiyo agent3540
+```
+
 ## Contributing
 Feel free to submit issues or pull requests if you have suggestions or improvements.
