@@ -12,6 +12,7 @@ const command = new Command()
     Deno.exit(0);
   })
 
+  .command("list", (await import("./video/list.ts")).default)
   .command("info", (await import("./video/info.ts")).default)
   .command("download", (await import("./video/download.ts")).default)
   .command("render", (await import("./video/render.ts")).default)
