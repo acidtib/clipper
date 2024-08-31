@@ -1,12 +1,13 @@
-# clipper: CLI Tool for Twitch Clip Video Compilations
+# clipper
 
 Easily create video compilations from Twitch clips with **clipper**. This CLI tool downloads clips and merges them into a single video. Customize your compilation with optional features such as:
+
+Example video compilations can be found at [https://www.youtube.com/watch?v=rDKzzEqEEQ8](https://www.youtube.com/watch?v=rDKzzEqEEQ8)
 
 - **Intro**: Add an introductory video to your compilation.
 - **Outro**: Include an ending video to wrap up your content.
 - **Transitions**: Smoothly transition between clips.
 - **Video Frame Overlay**: Apply a custom frame around your video.
-
 
 ## Installation
 
