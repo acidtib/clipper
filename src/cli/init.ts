@@ -51,7 +51,7 @@ class Action {
       if (error instanceof Deno.errors.NotFound) {
         logger.info(`config.yml does not exist. Creating file...`);
         const content = [
-          "# config.yml\n",
+          "# config.yml",
           "# Determines whether to include a frame around the video.",
           "# Set to true to enable the frame feature, or false to disable it.",
           "use_frame: false",
@@ -86,6 +86,11 @@ class Action {
           "# Specifies the file path to the MP4 video used as the outro. ",
           "# This path should point to a valid MP4 file that will be appended to the end of the video if use_outtro is set to true.",
           "outro_path: ./assets/media/outro.mp4",
+          "",
+          "# Specifies the client ID and client secret for the Twitch API. ",
+          "# These values can be obtained by creating a new app in the Twitch Developer Portal. https://dev.twitch.tv/console ",
+          "twitch_client_id: ",
+          "twitch_client_secret: ",
         ]
 
         await Deno.writeTextFile(pathFileConfig, content.join("\n"));
@@ -106,7 +111,7 @@ class Action {
       if (error instanceof Deno.errors.NotFound) {
         logger.info(`to_download.txt does not exist. Creating file...`);
         const content = [
-          "# to_download.txt\n",
+          "# to_download.txt",
           "# This file contains a list of Twitch clips to be downloaded and processed.",
           "# Each entry represents a clip with relevant metadata.",
           "# Format is:",

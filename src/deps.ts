@@ -17,3 +17,4 @@ export { logger } from "./lib/logger.ts";
 export { db } from "./lib/db.ts"
 export { YtDlp } from "./lib/yt-dlp.ts"
 export { FFmpeg } from "./lib/ffmpeg.ts"
+export { Twitch } from "./lib/twitch.ts"
