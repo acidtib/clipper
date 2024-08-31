@@ -143,8 +143,19 @@ class FFmpeg {
         "-i", filePath, 
         "-ss", startTime.toString(), 
         "-to", endTime.toString(), 
+        // options for cpu
         ...(this.device === "cpu" ? ["-c:v", "libx264", "-crf", this.atWhatQuality()] : []),
-        ...(this.device === "gpu" ? ["-c:v", "h264_nvenc", "-preset", "slow", "-qp", this.atWhatQuality(), "-profile:v", "high"] : []),
+        // options for gpu
+        ...(this.device === "gpu" ?
+          [
+            "-c:v", "h264_nvenc",
+            "-rc", "constqp",
+            "-qmin", "17", "-qmax", "51",
+            "-tune", "hq",
+            "-preset", "p7",
+            "-qp", this.atWhatQuality()
+          ] : []),
+          
         "-c:a", "aac", 
         savePath
       ],
@@ -282,6 +293,7 @@ class FFmpeg {
 
     const args = [
       "-y",
+      "-loglevel", "error",
       ...adjustedFileList.flatMap(file => typeof file === "string" ? ["-i", file] : ["-i", file.value.file_path]),
       "-filter_complex", `${filterComplex}`,
       "-map", "[outv]",
