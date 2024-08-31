@@ -1,7 +1,6 @@
 import { 
   Command,
   colors,
-  resolve,
   logger,
   db
 } from "../../deps.ts";
