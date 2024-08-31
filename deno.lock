@@ -8,10 +8,9 @@
       "jsr:@std/fmt@0.225.1": "jsr:@std/fmt@0.225.1",
       "jsr:@std/io@0.224.0": "jsr:@std/io@0.224.0",
       "jsr:@std/ulid@^1.0.0": "jsr:@std/ulid@1.0.0",
-      "jsr:@std/yaml": "jsr:@std/yaml@1.0.1",
+      "jsr:@std/yaml": "jsr:@std/yaml@1.0.2",
       "npm:@twurple/api": "npm:@twurple/api@7.1.0_@twurple+auth@7.1.0",
-      "npm:@twurple/auth": "npm:@twurple/auth@7.1.0",
-      "npm:@types/node": "npm:@types/node@18.16.19"
+      "npm:@twurple/auth": "npm:@twurple/auth@7.1.0"
     },
     "jsr": {
       "@olli/kvdex@2.0.2": {
@@ -37,8 +36,8 @@
       "@std/ulid@1.0.0": {
         "integrity": "d41c3d27a907714413649fee864b7cde8d42ee68437d22b79d5de4f81d808780"
       },
-      "@std/yaml@1.0.1": {
-        "integrity": "0e9e51c9e27bbc06455710fd1bfab77a1762827695c591dcb14fddb2778f76b4"
+      "@std/yaml@1.0.2": {
+        "integrity": "b343ae4da47c8f22a04bcab687cf36fc2926b7fb2de8f8ef06fc59499e55b632"
       }
     },
     "npm": {
@@ -136,10 +135,6 @@
           "klona": "klona@2.0.6",
           "tslib": "tslib@2.7.0"
         }
-      },
-      "@types/node@18.16.19": {
-        "integrity": "sha512-IXl7o+R9iti9eBW4Wg2hx1xQDig183jj7YLn8F7udNceyfkbn1ZxmzZXuak20gR40D7pIkIY1kYGx5VIGbaHKA==",
-        "dependencies": {}
       },
       "klona@2.0.6": {
         "integrity": "sha512-dhG34DXATL5hSxJbIexCft8FChFXtmskoZYnoPWjXQuebWYCNkVeV3KkGegCK9CP1oswI/vQibS2GY7Em/sJJA==",
@@ -347,7 +342,6 @@
     "https://deno.land/x/logger@v1.1.6/deps.ts": "85ac81fd5e6738541dee3fddf0a7ff7f1ca943822c6ef9e212bbea2baee92c67",
     "https://deno.land/x/logger@v1.1.6/eol.ts": "8da67b2cb62c1cee6920e88797f1d9f647425df7f4decafc4dd3775e29d0125d",
     "https://deno.land/x/logger@v1.1.6/fs.ts": "36fdfc2b162a586e7b829b42244f7a54513d75e9a382e12f1379a7aad8446d18",
-    "https://deno.land/x/logger@v1.1.6/interface.ts": "9f8cf829271816b5b842aa89ce44adefdf35619c6c8e62c36fd2e6fe458948b3",
     "https://deno.land/x/logger@v1.1.6/logger.ts": "5b12605357c35f7c29f56d62cf685a6f1ba40a1f4311b3543654666860cee7a8",
     "https://deno.land/x/logger@v1.1.6/stdout.ts": "28ff623094e1719d86a093c589558fba095caba4f30832493d07e82ea2d4ae59",
     "https://deno.land/x/logger@v1.1.6/types.ts": "7769b3a4059d25090a55079ee1ef77ff76adbcab22d017fe0a8a4a96e1eac8a0",
@@ -355,17 +349,6 @@
     "https://deno.land/x/logger@v1.1.6/writer.ts": "414a938e50a69fbd248e3247774f32e546bf0e80ff6e99c2d8aa70dcda97d2e3",
     "https://deno.land/x/momentjs@2.29.1-deno/mod.ts": "f0c8542988b812d2aeaabe4fe3d86e7638ba6dd469ac9dd252eb2d9a765b8b49",
     "https://deno.land/x/momentjs@2.29.1-deno/node_modules/moment/moment.js": "7ba0da6b25146fe95a948b47ec8a7707b4bcf6a87390d4b655a0663e107f7845",
-    "https://deno.land/x/pentagon@v0.1.5/deps.ts": "486904dff4ea0275059d7fa42ad7da6025eeced0c7885befa3354da3b9522dda",
-    "https://deno.land/x/pentagon@v0.1.5/mod.ts": "2a3226e25d9142c24cb93bc1c88b459c06d7b031643c4fb1969fe88d4f6b63b0",
-    "https://deno.land/x/pentagon@v0.1.5/src/batchOperations.ts": "0c9f410623e7f881d6cc4ba28e51e650f07120f8b86c53f2532d06efdc466a87",
-    "https://deno.land/x/pentagon@v0.1.5/src/crud.ts": "c9e924fe5a2dd1f37c3c3716c255c5f3d591da2a1927509e4275e74708fa1c6b",
-    "https://deno.land/x/pentagon@v0.1.5/src/errors.ts": "2d311e95b68a42b5a53528b6171acea1a3ba27e52d7cacdab0e5c54304d97394",
-    "https://deno.land/x/pentagon@v0.1.5/src/keys.ts": "82bc85bbca3425e8bdb5b19dc48997dc154c173b1462f9aafd9630ab639d1762",
-    "https://deno.land/x/pentagon@v0.1.5/src/pentagon.ts": "d603e704c7299a207373ddb2a528718c0adfa5f4c3a2ffdbd34ed7d11f44f96d",
-    "https://deno.land/x/pentagon@v0.1.5/src/relation.ts": "ed6da1fb9e521c09ef9fe29170ce78682bcc788bf41f0e11d031983aa1279f49",
-    "https://deno.land/x/pentagon@v0.1.5/src/search.ts": "ec1bb39df1e8bd551bcd22978cbd78466522f0b1a5b0002a38f5293a25ac272f",
-    "https://deno.land/x/pentagon@v0.1.5/src/types.ts": "f2a16e11eb9a724627a9b4532bc95f91a27a43d3d4aade14a947fcdc8cab671a",
-    "https://deno.land/x/pentagon@v0.1.5/src/util.ts": "a601821f1ee32209a1dd4c094ef541a6990755424f31fc490352e340b19798e9",
     "https://deno.land/x/zod@v3.21.4/ZodError.ts": "4de18ff525e75a0315f2c12066b77b5c2ae18c7c15ef7df7e165d63536fdf2ea",
     "https://deno.land/x/zod@v3.21.4/errors.ts": "5285922d2be9700cc0c70c95e4858952b07ae193aa0224be3cbd5cd5567eabef",
     "https://deno.land/x/zod@v3.21.4/external.ts": "a6cfbd61e9e097d5f42f8a7ed6f92f93f51ff927d29c9fbaec04f03cbce130fe",
