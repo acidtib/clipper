@@ -182,6 +182,7 @@ class FFmpeg {
     const transitionEnabled = config.get<boolean>("use_transition");
     const frameEnabled = config.get<boolean>("use_frame");
     const platformIconEnabled = config.get<boolean>("use_platform_icon");
+    const firstClipAsIntro = config.get<boolean>("use_first_clip_as_intro");
   
     const introPath = introEnabled ? resolve(config.get<string>("intro_path")!) : null;
     const outroPath = outroEnabled ? resolve(config.get<string>("outro_path")!) : null;
@@ -207,7 +208,9 @@ class FFmpeg {
 
       // add transition if enabled
       if (transitionEnabled && i < toConcat.length - 1) {
-        adjustedFileList.push(transitionPath!);
+        if (firstClipAsIntro && i !== 0) {
+          adjustedFileList.push(transitionPath!);  
+        }
       }
     });
 
@@ -219,6 +222,18 @@ class FFmpeg {
     let videoFilters = "";
     let audioFilters = "";
     let filterOutputs = "";
+
+    // shift intro if firstClipAsIntro is enabled
+    if (firstClipAsIntro) {
+      let movePosition = 1;
+      const firstElement = adjustedFileList.shift()!;
+
+      if (frameEnabled) movePosition += 1;
+
+      if (platformIconEnabled) movePosition += 1;
+
+      adjustedFileList.splice(movePosition, 0, firstElement);
+    }
 
     const adjustedForFilters = adjustedFileList.filter(item => item !== framePath).filter(item => item !== iconTwitchPath)
     
