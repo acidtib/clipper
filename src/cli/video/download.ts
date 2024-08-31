@@ -156,7 +156,7 @@ class Action {
     Array.from(new Map(streamersList.map((s) => [`${s.username}_${s.platform}`, s])).values()).forEach(async item => {
       // check if streamer exists
       const result = await db.streamers.getOne({
-        filter: (doc) => doc.value.username === item.username && doc.value.platform === item.platform,
+        filter: (doc) => doc.value.username === item.username.toLowerCase() && doc.value.platform === item.platform,
       })
       if (!result) {
         // add streamer
@@ -178,7 +178,7 @@ class Action {
       const { clipId, username, platform } = this.parseClipUrl(clipData.url);
 
       const streamer = await db.streamers.getOne({
-        filter: (doc) => doc.value.username === username && doc.value.platform === platform,
+        filter: (doc) => doc.value.username === username.toLowerCase() && doc.value.platform === platform,
       })
 
       const rawPath = resolve(

@@ -10,9 +10,7 @@ const command = new Command()
     Deno.exit(0);
   })
 
-  // .command("info", (await import("./video/info.ts")).default)
-  // .command("download", (await import("./video/download.ts")).default)
-  // .command("render", (await import("./video/render.ts")).default)
+  .command("get", (await import("./twitch/get.ts")).default)
   .command("help", new HelpCommand())
 
 export default command;
