@@ -56,12 +56,8 @@ export default new Command()
     }
   
     async execute() {
-      const video = await db.videos.findFirst({
-        where: { id: this.id },
-        include: {
-          clips: true
-        }
-      });
+      // check that video id exists
+      const video = await db.videos.find(this.id)
   
       this.options.debug &&
         logger.warn(
@@ -71,36 +67,42 @@ export default new Command()
   
       // check that video id exists
       if (video) {
-        if (this.options.force) {
+        if (!video.value.output || video.value.output === "") {
           logger.info(
-            `${colors.bold.yellow.underline(this.id)} / Overwriting files.`,
+            `${colors.bold.yellow.underline(this.id)} / First render.`,
           );
-  
-          // update step value
-          await db.videos.update({
-            where: { id: this.id },
-            data: {
-              step: "rendering",
-            },
-          })
-  
         } else {
-          logger.info(
-            `${colors.bold.yellow.underline(this.id)} / Video id already exists. Use --force to overwrite it.`,
-          );
-          return;
-        }
+          if (this.options.force) {
+            logger.info(
+              `${colors.bold.yellow.underline(this.id)} / Overwriting render.`,
+            );  
+          } else {
+            logger.info(
+              `${colors.bold.yellow.underline(this.id)} / Video render already exists. Use --force to overwrite it.`,
+            );
+            return;
+          }
+        }        
       } else {
         logger.info(
           `${colors.bold.yellow.underline(this.id)} / Cant find video.`,
         );
         return;
       }
-  
+
+      // update step value
+      await db.videos.update(
+        this.id,
+        { step: "rendering" },
+        { strategy: "merge" },
+      )
+
       // create folder
       await ensureDir(this.basePath);
       
-      const clips = video.clips;
+      const { result: clips } = await db.clips.getMany({
+        filter: (doc) => doc.value.videoId === this.id,
+      })
 
       this.options.debug && logger.warn(clips);
   
@@ -115,16 +117,15 @@ export default new Command()
 
       // stitch clips into video
       await this.ffmpeg.concat(
-        clips.sort((a, b) => a.order - b.order),
+        clips.sort((a, b) => a.value.order - b.value.order),
         resolve(this.basePath, "output.mp4"),
       )
 
-      await db.videos.update({
-        where: { id: this.id },
-        data: {
-          output: resolve(this.basePath, "output.mp4"),
-        },
-      })
+      await db.videos.update(
+        this.id,
+        { output: resolve(this.basePath, "output.mp4") },
+        { strategy: "merge" },
+      )
 
       logger.info(`${colors.bold.yellow.underline(this.id)} / Render complete.`);
       logger.info(`${colors.bold.yellow.underline(this.id)} / Output: ${resolve(this.basePath, "output.mp4")}`);

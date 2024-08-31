@@ -47,15 +47,16 @@ class Action {
       }
     }
 
-    const video = await db.videos.findFirst({
-      where: { id: this.id },
-      include: {
-        clips: true
-      }
-    });
-
-    logger.info(`${colors.bold.yellow.underline(this.id)} / Clips:`, video.clips.length);
+    const video = await db.videos.find(this.id)
 
     logger.info(`${colors.bold.yellow.underline(this.id)} / Video Data:`, video);
+
+    const { result: clips } = await db.clips.getMany({
+      filter: (doc) => doc.value.videoId === this.id,
+    })
+
+    logger.info(`${colors.bold.yellow.underline(this.id)} / Clips:`, clips.length);
+
+    this.options.debug && logger.info(`${colors.bold.yellow.underline(this.id)} / Clips Data:`, clips);
   }
 }

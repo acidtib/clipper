@@ -66,9 +66,7 @@ class Action {
 
   async execute() {
     // check that video id exists
-    const video = await db.videos.findFirst({
-      where: { id: this.id }
-    });
+    const video = await db.videos.find(this.id)
 
     this.options.debug &&
       logger.warn(
@@ -84,18 +82,16 @@ class Action {
         );
 
         // update step value
-        await db.videos.update({
-          where: { id: this.id },
-          data: {
-            step: "download",
-          },
-        })
+        await db.videos.update(
+          this.id,
+          { step: "download" },
+          { strategy: "merge" },
+        )
 
         // clean up current clips from db
         await db.clips.deleteMany({
-          where: { videoId: this.id }
-        });
-
+          filter: (doc) => doc.value.videoId === this.id,
+        })
       } else {
         logger.info(
           `${colors.bold.yellow.underline(this.id)} / Video id already exists. Use --force to overwrite it.`,
@@ -107,14 +103,20 @@ class Action {
       logger.info(`${colors.bold.yellow.underline(this.id)} / New video id.`);
 
       // create new video
-      await db.videos.create({
-        data: {
-          id: this.id,
-          createdAt: new Date(),
-          step: "download",
-        },
-      });
+      const newVideoResult = await db.videos.add({
+        video_id: this.id,
+        createdAt: new Date(),
+        step: "download",
+      })
+
+      if (!newVideoResult.ok) {
+        logger.error(
+          `${colors.bold.yellow.underline(this.id)} / Failed to create new video.`,
+        );
+        return;
+      }
     }
+
 
     let content;
     try {
@@ -140,7 +142,29 @@ class Action {
       logger.info(`${colors.bold.yellow.underline(this.id)} / No clips to download.`);
       return;
     }
+
+    // process the streamers and add them to the db
+    let streamersList = [];
+    // parse line and get streamer data
+    for (const line of lines) {
+      const clipData = this.parseLine(line);
+      const { username, platform } = this.parseClipUrl(clipData.url);
+      streamersList.push({ username: username!, platform: platform!, platform_id: "twitch_id" });
+    }
+
+    // add streamers to db
+    Array.from(new Map(streamersList.map((s) => [`${s.username}_${s.platform}`, s])).values()).forEach(async item => {
+      // check if streamer exists
+      const result = await db.streamers.getOne({
+        filter: (doc) => doc.value.username === item.username && doc.value.platform === item.platform,
+      })
+      if (!result) {
+        // add streamer
+        await db.streamers.add(item)
+      }
+    });
     
+
     // download each clip and normalize the audio
     await Promise.all(lines.map(async (line, index) => {
       let clipData = this.parseLine(line);
@@ -148,11 +172,14 @@ class Action {
       logger.info(
         `${colors.bold.yellow.underline(this.id)} / Working on ${clipData.url}`,
       );
-      this.options.debug &&
-        logger.warn(colors.bold.green(`[DEBUG:]`), clipData);
+      this.options.debug && logger.warn(colors.bold.green(`[DEBUG:]`), clipData);
       this.clipList.push(clipData);
 
-      const { clipId, username } = this.parseClipUrl(clipData.url);
+      const { clipId, username, platform } = this.parseClipUrl(clipData.url);
+
+      const streamer = await db.streamers.getOne({
+        filter: (doc) => doc.value.username === username && doc.value.platform === platform,
+      })
 
       const rawPath = resolve(
         this.basePath,
@@ -218,24 +245,17 @@ class Action {
         sourcePath,
         resolve(this.basePath, `${index}_${username}_${clipId}.mp4`),
       );
-
-      const findClip = await db.clips.findFirst({
-        where: {
-          id: clipId,
-          videoId: this.id
-        },
+      
+      const findClip = await db.clips.getOne({
+        filter: (doc) => doc.id === clipId && doc.value.videoId === this.id,
       })
-
+      
       if (findClip) {
         // update the clip in the db
-        await db.clips.update({
-          where: {
-            id: clipId,
-            videoId: this.id
-          },
-          data: {
-            username: username!,
-            source: "twitch",
+        await db.clips.update(
+          clipId,
+          {
+            source: platform!,
             source_url: clipData.url,
             duration: clipDuration,
             file_path: resolve(this.basePath, `${index}_${username}_${clipId}.mp4`),
@@ -243,26 +263,25 @@ class Action {
             trim_end: endTime,
             trim_action: trimClip,
           },
-        })
-        
+          { strategy: "merge" },
+        )
+
       } else {
         // add the clip to the db
-        await db.clips.create({
-          data: {
-            id: clipId!,
-            videoId: this.id,
-            order: index,
-            username: username!,
-            source: "twitch",
-            source_url: clipData.url,
-            duration: clipDuration,
-            file_path: resolve(this.basePath, `${index}_${username}_${clipId}.mp4`),
-            trim_start: startTime,
-            trim_end: endTime,
-            trim_action: trimClip,
-            createdAt: new Date(),
-          },
-        });
+        await db.clips.add({
+          clip_id: clipId!,
+          videoId: this.id,
+          streamerId: streamer!.id,
+          order: index,
+          source: platform!,
+          source_url: clipData.url,
+          duration: clipDuration,
+          file_path: resolve(this.basePath, `${index}_${username}_${clipId}.mp4`),
+          trim_start: startTime,
+          trim_end: endTime,
+          trim_action: trimClip,
+          createdAt: new Date(),
+        })
       }
 
       // remove the temp files
@@ -284,15 +303,17 @@ class Action {
     const url = new URL(clipUrl);
     let username;
     let clipId;
+    let platform;
 
     if (url.host.includes("twitch.tv")) {
       // Split the pathname to extract username and clip ID
       const segments = url.pathname.split("/");
       username = segments[1].toLowerCase();
       clipId = segments[3].toLowerCase();
+      platform = "twitch";
     }
 
-    return { username, clipId };
+    return { username, clipId, platform };
   }
 
   // parse the line data

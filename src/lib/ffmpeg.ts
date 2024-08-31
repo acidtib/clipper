@@ -2,7 +2,8 @@ import {
   colors,
   logger,
   config,
-  resolve
+  resolve,
+  db
 } from "../deps.ts";
 
 import moment from "https://deno.land/x/momentjs@2.29.1-deno/mod.ts";
@@ -142,8 +143,19 @@ class FFmpeg {
         "-i", filePath, 
         "-ss", startTime.toString(), 
         "-to", endTime.toString(), 
+        // options for cpu
         ...(this.device === "cpu" ? ["-c:v", "libx264", "-crf", this.atWhatQuality()] : []),
-        ...(this.device === "gpu" ? ["-c:v", "h264_nvenc", "-preset", "slow", "-qp", this.atWhatQuality(), "-profile:v", "high"] : []),
+        // options for gpu
+        ...(this.device === "gpu" ?
+          [
+            "-c:v", "h264_nvenc",
+            "-rc", "constqp",
+            "-qmin", "17", "-qmax", "51",
+            "-tune", "hq",
+            "-preset", "p7",
+            "-qp", this.atWhatQuality()
+          ] : []),
+          
         "-c:a", "aac", 
         savePath
       ],
@@ -170,6 +182,7 @@ class FFmpeg {
     const transitionEnabled = config.get<boolean>("use_transition");
     const frameEnabled = config.get<boolean>("use_frame");
     const platformIconEnabled = config.get<boolean>("use_platform_icon");
+    const firstClipAsIntro = config.get<boolean>("use_first_clip_as_intro");
   
     const introPath = introEnabled ? resolve(config.get<string>("intro_path")!) : null;
     const outroPath = outroEnabled ? resolve(config.get<string>("outro_path")!) : null;
@@ -195,7 +208,9 @@ class FFmpeg {
 
       // add transition if enabled
       if (transitionEnabled && i < toConcat.length - 1) {
-        adjustedFileList.push(transitionPath!);
+        if (firstClipAsIntro && i !== 0) {
+          adjustedFileList.push(transitionPath!);  
+        }
       }
     });
 
@@ -208,52 +223,73 @@ class FFmpeg {
     let audioFilters = "";
     let filterOutputs = "";
 
-    const adjustedForFilters = adjustedFileList.filter(item => item !== framePath).filter(item => item !== iconTwitchPath)
+    // shift intro if firstClipAsIntro is enabled
+    if (firstClipAsIntro) {
+      let movePosition = 1;
+      const firstElement = adjustedFileList.shift()!;
 
-    adjustedForFilters.forEach((item, i) => {
+      if (frameEnabled) movePosition += 1;
+
+      if (platformIconEnabled) movePosition += 1;
+
+      adjustedFileList.splice(movePosition, 0, firstElement);
+    }
+
+    const adjustedForFilters = adjustedFileList.filter(item => item !== framePath).filter(item => item !== iconTwitchPath)
+    
+    for (const [i, item] of adjustedForFilters.entries()) {
       const isClip = typeof item === "object"
+      let streamer
       const isIntro = item === introPath;
       const isOutro = item === outroPath;
       const isTransition = item === transitionPath;
 
+      if (isClip) {
+        streamer = await db.streamers.find(item.value.streamerId)
+      }
+
       // add intro if enabled
       if (isIntro) {
-        videoFilters += `[${filterIndex}:v]setpts=PTS-STARTPTS,settb=AVTB,scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:-1:-1,setsar=1,drawtext=fontfile=assets/fonts/CowboyHippiePro.otf:text='hello':x=(w-text_w)/2:y=700:fontsize=220:fontcolor=#78854A[v${i}];`;
+        videoFilters += `[${filterIndex}:v]setpts=PTS-STARTPTS,settb=AVTB,scale=2560:1440:force_original_aspect_ratio=decrease,pad=2560:1440:-1:-1,setsar=1,drawtext=fontfile=assets/fonts/CowboyHippiePro.otf:text='hello':x=(w-text_w)/2:y=700:fontsize=220:fontcolor=#78854A[v${i}];`;
       }
 
       // add outro if enabled
       if (isOutro) {
-        videoFilters += `[${filterIndex}:v]setpts=PTS-STARTPTS,settb=AVTB,scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:-1:-1,setsar=1[v${i}];`;
+        videoFilters += `[${filterIndex}:v]setpts=PTS-STARTPTS,settb=AVTB,scale=2560:1440:force_original_aspect_ratio=decrease,pad=2560:1440:-1:-1,setsar=1[v${i}];`;
       }
 
       // add transition if enabled
       if (isTransition) {
-        videoFilters += `[${filterIndex}:v]setpts=PTS-STARTPTS,settb=AVTB,scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:-1:-1,setsar=1[v${i}];`;
+        videoFilters += `[${filterIndex}:v]setpts=PTS-STARTPTS,settb=AVTB,scale=2560:1440:force_original_aspect_ratio=decrease,pad=2560:1440:-1:-1,setsar=1[v${i}];`;
       }
 
-      if (isClip && frameEnabled) {
+      if (isClip && frameEnabled) {       
         // clip with frame
-        videoFilters += `[${filterIndex}:v]scale=1709x961[scaled_video${i+1}];[${filterIndex += 1}:v]scale=1920:1080,drawtext=fontfile=assets/fonts/GT-Sectra-Fine-Medium.ttf:text='${(item as unknown as { username: string }).username.toUpperCase()}'`
+        videoFilters += `[${filterIndex}:v]scale=2276x1280[scaled_video${i+1}];[${filterIndex += 1}:v]scale=2560:1440,drawtext=fontfile=assets/fonts/GT-Sectra-Fine-Medium.ttf:text='${streamer.value.username.toUpperCase()}'`
 
         audioFilters += `[${filterIndex - 1}:a]asetpts=PTS-STARTPTS[a${i}];`;
 
         if (platformIconEnabled) {
-          videoFilters += `:x=170:y=h-th-45:fontsize=49:fontcolor=#e7e7d7[overlay];[overlay][scaled_video${i+1}]overlay=x=107:y=0[v${i}];`;
-          videoFilters += `[v${i}][${filterIndex += 1}:v]overlay=x=108:y=main_h-overlay_h-35[v${i}];`;
+          videoFilters += `:x=224:y=h-th-58:fontsize=60:fontcolor=#e7e7d7[overlay];`; // overlay placement of the username
+          videoFilters += `[overlay][scaled_video${i+1}]overlay=x=142:y=0[v${i}];`; // overlay placement of the frame
+          videoFilters += `[v${i}][${filterIndex += 1}:v]overlay=x=142:y=main_h-overlay_h-44[v${i}];`; // overlay placement of the platform icon
         } else {
-          videoFilters += `:x=110:y=h-th-45:fontsize=49:fontcolor=#e7e7d7[overlay];[overlay][scaled_video${i+1}]overlay=x=107:y=0[v${i}];`;
+          videoFilters += `:x=142:y=h-th-58:fontsize=60:fontcolor=#e7e7d7[overlay];`; // overlay placement of the username
+          videoFilters += `[overlay][scaled_video${i+1}]overlay=x=142:y=0[v${i}];`; // overlay placement of the frame
         }
         
         filterOutputs += `[v${i}][a${i}]`;
       } else if (isClip) {
         // normal clip
         if (platformIconEnabled) {
-          videoFilters += `[${filterIndex}:v]setpts=PTS-STARTPTS,settb=AVTB,scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:-1:-1,setsar=1,drawtext=fontfile=assets/fonts/GT-Sectra-Fine-Medium.ttf:text='${(item as unknown as { username: string }).username}':box=1:boxcolor=black@0.6:boxborderw=5:x=100:y=24:fontsize=50:fontcolor=#e7e7d7[v${i}];[v${i}][${filterIndex += 1}:v]overlay=x=30:y=20[v${i}];`;
+          videoFilters += `[${filterIndex}:v]setpts=PTS-STARTPTS,settb=AVTB,scale=2560:1440:force_original_aspect_ratio=decrease,pad=2560:1440:-1:-1,setsar=1,drawtext=fontfile=assets/fonts/GT-Sectra-Fine-Medium.ttf:text='${streamer.value.username.toUpperCase()}':box=1:boxcolor=black@0.6:boxborderw=5:`;
+          videoFilters += `x=120:y=26:fontsize=65:fontcolor=#e7e7d7[v${i}];`; // overlay placement of the username
+          videoFilters += `[v${i}][${filterIndex += 1}:v]overlay=x=30:y=20[v${i}];`; // overlay placement of the platform icon
           audioFilters += `[${filterIndex - 1}:a]asetpts=PTS-STARTPTS[a${i}];`;
           filterOutputs += `[v${i}][a${i}]`;
-
         } else {
-          videoFilters += `[${filterIndex}:v]setpts=PTS-STARTPTS,settb=AVTB,scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:-1:-1,setsar=1,drawtext=fontfile=assets/fonts/GT-Sectra-Fine-Medium.ttf:text='${(item as unknown as { username: string }).username}':box=1:boxcolor=black@0.6:boxborderw=5:x=30:y=20:fontsize=50:fontcolor=#e7e7d7[v${i}];`;
+          videoFilters += `[${filterIndex}:v]setpts=PTS-STARTPTS,settb=AVTB,scale=2560:1440:force_original_aspect_ratio=decrease,pad=2560:1440:-1:-1,setsar=1,drawtext=fontfile=assets/fonts/GT-Sectra-Fine-Medium.ttf:text='${streamer.value.username.toUpperCase()}':box=1:boxcolor=black@0.6:boxborderw=5:`;
+          videoFilters += `x=30:y=20:fontsize=65:fontcolor=#e7e7d7[v${i}];`; // overlay placement of the username
           audioFilters += `[${filterIndex}:a]asetpts=PTS-STARTPTS[a${i}];`;
           filterOutputs += `[v${i}][a${i}]`;
         }
@@ -266,13 +302,14 @@ class FFmpeg {
       }
 
       filterIndex += 1
-    })
+    }
 
     const filterComplex = `${videoFilters}${audioFilters}${filterOutputs}concat=n=${adjustedForFilters.length}:v=1:a=1[outv][outa]`;
 
     const args = [
       "-y",
-      ...adjustedFileList.flatMap(file => typeof file === "string" ? ["-i", file] : ["-i", (file as { file_path: string }).file_path]),
+      "-loglevel", "error",
+      ...adjustedFileList.flatMap(file => typeof file === "string" ? ["-i", file] : ["-i", file.value.file_path]),
       "-filter_complex", `${filterComplex}`,
       "-map", "[outv]",
       "-map", "[outa]",
@@ -304,6 +341,8 @@ class FFmpeg {
     ];
 
     console.log(args.join(" "));
+
+    // return 0
 
     this.debug && console.log(args.join(" "));
   
