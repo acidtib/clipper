@@ -302,7 +302,9 @@ class Action {
         }
       }
 
+      await progress.console(`Downloaded / ${streamer!.value.username} ${clipId}`);
       await progress.render(completed++);
+      
     }));
 
     await progress.render(lines.length);
