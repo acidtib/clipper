@@ -6,8 +6,6 @@ export { resolve } from "https://deno.land/std@0.224.0/path/mod.ts";
 export { ensureDir, exists } from "https://deno.land/std@0.224.0/fs/mod.ts";
 
 export { z } from "https://deno.land/x/zod@v3.21.4/mod.ts";
-export { createPentagon } from "https://deno.land/x/pentagon@v0.1.5/mod.ts";
-
 export { ulid } from "https://deno.land/std@0.208.0/ulid/mod.ts"
 
 export { parse as parseYaml, stringify as stringifyYaml } from "jsr:@std/yaml";

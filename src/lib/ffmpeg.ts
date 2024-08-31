@@ -2,7 +2,8 @@ import {
   colors,
   logger,
   config,
-  resolve
+  resolve,
+  db
 } from "../deps.ts";
 
 import moment from "https://deno.land/x/momentjs@2.29.1-deno/mod.ts";
@@ -209,31 +210,36 @@ class FFmpeg {
     let filterOutputs = "";
 
     const adjustedForFilters = adjustedFileList.filter(item => item !== framePath).filter(item => item !== iconTwitchPath)
-
-    adjustedForFilters.forEach((item, i) => {
+    
+    for (const [i, item] of adjustedForFilters.entries()) {
       const isClip = typeof item === "object"
+      let streamer
       const isIntro = item === introPath;
       const isOutro = item === outroPath;
       const isTransition = item === transitionPath;
 
+      if (isClip) {
+        streamer = await db.streamers.find(item.value.streamerId)
+      }
+
       // add intro if enabled
       if (isIntro) {
-        videoFilters += `[${filterIndex}:v]setpts=PTS-STARTPTS,settb=AVTB,scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:-1:-1,setsar=1,drawtext=fontfile=assets/fonts/CowboyHippiePro.otf:text='hello':x=(w-text_w)/2:y=700:fontsize=220:fontcolor=#78854A[v${i}];`;
+        videoFilters += `[${filterIndex}:v]setpts=PTS-STARTPTS,settb=AVTB,scale=2560:1440:force_original_aspect_ratio=decrease,pad=2560:1440:-1:-1,setsar=1,drawtext=fontfile=assets/fonts/CowboyHippiePro.otf:text='hello':x=(w-text_w)/2:y=700:fontsize=220:fontcolor=#78854A[v${i}];`;
       }
 
       // add outro if enabled
       if (isOutro) {
-        videoFilters += `[${filterIndex}:v]setpts=PTS-STARTPTS,settb=AVTB,scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:-1:-1,setsar=1[v${i}];`;
+        videoFilters += `[${filterIndex}:v]setpts=PTS-STARTPTS,settb=AVTB,scale=2560:1440:force_original_aspect_ratio=decrease,pad=2560:1440:-1:-1,setsar=1[v${i}];`;
       }
 
       // add transition if enabled
       if (isTransition) {
-        videoFilters += `[${filterIndex}:v]setpts=PTS-STARTPTS,settb=AVTB,scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:-1:-1,setsar=1[v${i}];`;
+        videoFilters += `[${filterIndex}:v]setpts=PTS-STARTPTS,settb=AVTB,scale=2560:1440:force_original_aspect_ratio=decrease,pad=2560:1440:-1:-1,setsar=1[v${i}];`;
       }
 
-      if (isClip && frameEnabled) {
+      if (isClip && frameEnabled) {       
         // clip with frame
-        videoFilters += `[${filterIndex}:v]scale=1709x961[scaled_video${i+1}];[${filterIndex += 1}:v]scale=1920:1080,drawtext=fontfile=assets/fonts/GT-Sectra-Fine-Medium.ttf:text='${(item as unknown as { username: string }).username.toUpperCase()}'`
+        videoFilters += `[${filterIndex}:v]scale=1709x961[scaled_video${i+1}];[${filterIndex += 1}:v]scale=2560:1440,drawtext=fontfile=assets/fonts/GT-Sectra-Fine-Medium.ttf:text='${streamer.value.username.toUpperCase()}'`
 
         audioFilters += `[${filterIndex - 1}:a]asetpts=PTS-STARTPTS[a${i}];`;
 
@@ -248,12 +254,12 @@ class FFmpeg {
       } else if (isClip) {
         // normal clip
         if (platformIconEnabled) {
-          videoFilters += `[${filterIndex}:v]setpts=PTS-STARTPTS,settb=AVTB,scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:-1:-1,setsar=1,drawtext=fontfile=assets/fonts/GT-Sectra-Fine-Medium.ttf:text='${(item as unknown as { username: string }).username}':box=1:boxcolor=black@0.6:boxborderw=5:x=100:y=24:fontsize=50:fontcolor=#e7e7d7[v${i}];[v${i}][${filterIndex += 1}:v]overlay=x=30:y=20[v${i}];`;
+          videoFilters += `[${filterIndex}:v]setpts=PTS-STARTPTS,settb=AVTB,scale=2560:1440:force_original_aspect_ratio=decrease,pad=2560:1440:-1:-1,setsar=1,drawtext=fontfile=assets/fonts/GT-Sectra-Fine-Medium.ttf:text='${streamer.value.username}':box=1:boxcolor=black@0.6:boxborderw=5:x=100:y=24:fontsize=50:fontcolor=#e7e7d7[v${i}];[v${i}][${filterIndex += 1}:v]overlay=x=30:y=20[v${i}];`;
           audioFilters += `[${filterIndex - 1}:a]asetpts=PTS-STARTPTS[a${i}];`;
           filterOutputs += `[v${i}][a${i}]`;
 
         } else {
-          videoFilters += `[${filterIndex}:v]setpts=PTS-STARTPTS,settb=AVTB,scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:-1:-1,setsar=1,drawtext=fontfile=assets/fonts/GT-Sectra-Fine-Medium.ttf:text='${(item as unknown as { username: string }).username}':box=1:boxcolor=black@0.6:boxborderw=5:x=30:y=20:fontsize=50:fontcolor=#e7e7d7[v${i}];`;
+          videoFilters += `[${filterIndex}:v]setpts=PTS-STARTPTS,settb=AVTB,scale=2560:1440:force_original_aspect_ratio=decrease,pad=2560:1440:-1:-1,setsar=1,drawtext=fontfile=assets/fonts/GT-Sectra-Fine-Medium.ttf:text='${streamer.value.username}':box=1:boxcolor=black@0.6:boxborderw=5:x=30:y=20:fontsize=50:fontcolor=#e7e7d7[v${i}];`;
           audioFilters += `[${filterIndex}:a]asetpts=PTS-STARTPTS[a${i}];`;
           filterOutputs += `[v${i}][a${i}]`;
         }
@@ -266,13 +272,13 @@ class FFmpeg {
       }
 
       filterIndex += 1
-    })
+    }
 
     const filterComplex = `${videoFilters}${audioFilters}${filterOutputs}concat=n=${adjustedForFilters.length}:v=1:a=1[outv][outa]`;
 
     const args = [
       "-y",
-      ...adjustedFileList.flatMap(file => typeof file === "string" ? ["-i", file] : ["-i", (file as { file_path: string }).file_path]),
+      ...adjustedFileList.flatMap(file => typeof file === "string" ? ["-i", file] : ["-i", file.value.file_path]),
       "-filter_complex", `${filterComplex}`,
       "-map", "[outv]",
       "-map", "[outa]",
@@ -304,6 +310,8 @@ class FFmpeg {
     ];
 
     console.log(args.join(" "));
+
+    // return 0
 
     this.debug && console.log(args.join(" "));
   

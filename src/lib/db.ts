@@ -35,6 +35,8 @@ const StreamerModel = z.object({
 
 const ClipModel = z.object({
   clip_id: z.string().describe("primary"),
+  videoId: z.string(),
+  streamerId: z.string(),
   createdAt: z.date(),
   source: z.string(),
   source_url: z.string(),
@@ -44,7 +46,6 @@ const ClipModel = z.object({
   trim_start: z.number().optional(),
   trim_end: z.number().optional(),
   trim_action: z.boolean().optional(),
-  videoId: z.string(),
 });
 
 // schema

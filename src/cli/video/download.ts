@@ -74,8 +74,6 @@ class Action {
         video,
       );
     
-    console.log(video);
-      
     if (video) {
       // video exists
       if (this.options.force) {
@@ -91,10 +89,9 @@ class Action {
         )
 
         // clean up current clips from db
-        // await db.clips.deleteMany({
-        //   where: { videoId: this.id }
-        // });
-
+        await db.clips.deleteMany({
+          filter: (doc) => doc.value.videoId === this.id,
+        })
       } else {
         logger.info(
           `${colors.bold.yellow.underline(this.id)} / Video id already exists. Use --force to overwrite it.`,
@@ -252,53 +249,40 @@ class Action {
       const findClip = await db.clips.getOne({
         filter: (doc) => doc.id === clipId && doc.value.videoId === this.id,
       })
-      console.log(findClip);
       
-      // const findClip = await db.clips.findFirst({
-      //   where: {
-      //     id: clipId,
-      //     videoId: this.id
-      //   },
-      // })
+      if (findClip) {
+        // update the clip in the db
+        await db.clips.update(
+          clipId,
+          {
+            source: platform!,
+            source_url: clipData.url,
+            duration: clipDuration,
+            file_path: resolve(this.basePath, `${index}_${username}_${clipId}.mp4`),
+            trim_start: startTime,
+            trim_end: endTime,
+            trim_action: trimClip,
+          },
+          { strategy: "merge" },
+        )
 
-      // if (findClip) {
-      //   // update the clip in the db
-      //   await db.clips.update({
-      //     where: {
-      //       id: clipId,
-      //       videoId: this.id
-      //     },
-      //     data: {
-      //       username: username!,
-      //       source: "twitch",
-      //       source_url: clipData.url,
-      //       duration: clipDuration,
-      //       file_path: resolve(this.basePath, `${index}_${username}_${clipId}.mp4`),
-      //       trim_start: startTime,
-      //       trim_end: endTime,
-      //       trim_action: trimClip,
-      //     },
-      //   })
-        
-      // } else {
-      //   // add the clip to the db
-      //   await db.clips.create({
-      //     data: {
-      //       id: clipId!,
-      //       videoId: this.id,
-      //       order: index,
-      //       username: username!,
-      //       source: "twitch",
-      //       source_url: clipData.url,
-      //       duration: clipDuration,
-      //       file_path: resolve(this.basePath, `${index}_${username}_${clipId}.mp4`),
-      //       trim_start: startTime,
-      //       trim_end: endTime,
-      //       trim_action: trimClip,
-      //       createdAt: new Date(),
-      //     },
-      //   });
-      // }
+      } else {
+        // add the clip to the db
+        await db.clips.add({
+          clip_id: clipId!,
+          videoId: this.id,
+          streamerId: streamer!.id,
+          order: index,
+          source: platform!,
+          source_url: clipData.url,
+          duration: clipDuration,
+          file_path: resolve(this.basePath, `${index}_${username}_${clipId}.mp4`),
+          trim_start: startTime,
+          trim_end: endTime,
+          trim_action: trimClip,
+          createdAt: new Date(),
+        })
+      }
 
       // remove the temp files
       for (const file of [rawPath, sourcePath]) {
