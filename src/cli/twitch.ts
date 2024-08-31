@@ -1,7 +1,7 @@
 import { Command, HelpCommand } from "../deps.ts";
 
 const command = new Command()
-  .description("Fetch twitch data.")
+  .description("Working with twitch data.")
 
   .globalOption("--force", "Force action.", { default: false })
 
