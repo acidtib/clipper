@@ -250,7 +250,9 @@ class FFmpeg {
 
       // add intro if enabled
       if (isIntro) {
-        videoFilters += `[${filterIndex}:v]setpts=PTS-STARTPTS,settb=AVTB,scale=2560:1440:force_original_aspect_ratio=decrease,pad=2560:1440:-1:-1,setsar=1,drawtext=fontfile=assets/fonts/CowboyHippiePro.otf:text='hello':x=(w-text_w)/2:y=700:fontsize=220:fontcolor=#78854A[v${i}];`;
+        videoFilters += `[${filterIndex}:v]setpts=PTS-STARTPTS,settb=AVTB,scale=2560:1440:force_original_aspect_ratio=decrease,pad=2560:1440:-1:-1,setsar=1,`;
+        videoFilters += `drawtext=fontfile=assets/fonts/GT-Sectra-Fine-Medium.ttf:text='${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}'`; // intro text
+        videoFilters += `:x=(w-text_w)/2:y=1000:fontsize=100:fontcolor=#e7e7d7[v${i}];`; // intro position
       }
 
       // add outro if enabled
