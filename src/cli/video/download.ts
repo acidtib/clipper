@@ -89,11 +89,6 @@ class Action {
           { step: "download" },
           { strategy: "merge" },
         )
-
-        // clean up current clips from db
-        await db.clips.deleteMany({
-          filter: (doc) => doc.value.videoId === this.id,
-        })
       } else {
         logger.info(
           `${colors.bold.yellow.underline(this.id)} / Video id already exists. Use --force to overwrite it.`,
@@ -118,6 +113,12 @@ class Action {
         return;
       }
     }
+
+
+    // clean up any clips from video in db
+    await db.clips.deleteMany({
+      filter: (doc) => doc.value.videoId === this.id,
+    })
 
 
     let content;
@@ -158,7 +159,7 @@ class Action {
     Array.from(new Map(streamersList.map((s) => [`${s.username}_${s.platform}`, s])).values()).forEach(async item => {
       // check if streamer exists
       const result = await db.streamers.getOne({
-        filter: (doc) => doc.value.username === item.username.toLowerCase() && doc.value.platform === item.platform,
+        filter: (doc) => doc.value.username === item.username && doc.value.platform === item.platform,
       })
       if (!result) {
         // add streamer
@@ -180,21 +181,20 @@ class Action {
     await Promise.all(lines.map(async (line, index) => {
       let clipData = this.parseLine(line);
       let trimClip = false;
-      // logger.info(
-      //   `${colors.bold.yellow.underline(this.id)} / Working on ${clipData.url}`,
-      // );
+
       this.options.debug && logger.warn(colors.bold.green(`[DEBUG:]`), clipData);
+
       this.clipList.push(clipData);
 
-      const { clipId, username, platform } = this.parseClipUrl(clipData.url);
+      const { platform_id, username, platform } = this.parseClipUrl(clipData.url);
 
       const streamer = await db.streamers.getOne({
-        filter: (doc) => doc.value.username === username.toLowerCase() && doc.value.platform === platform,
+        filter: (doc) => doc.value.username === username && doc.value.platform === platform,
       })
 
       const rawPath = resolve(
         this.basePath,
-        `raw_${index}_${username}_${clipId}.mp4`,
+        `raw_${index}_${username}_${platform_id}.mp4`,
       );
       let sourcePath = rawPath;
 
@@ -232,18 +232,18 @@ class Action {
       if (trimClip) {
         // trim the clip
         logger.warn(
-          `${colors.bold.yellow.underline(this.id)} / trimming clip ${clipId} from ${startTime} to ${endTime}`,
+          `${colors.bold.yellow.underline(this.id)} / trimming clip ${platform_id} from ${startTime} to ${endTime}`,
         );
         await this.ffmpeg.trim(
           rawPath,
-          resolve(this.basePath, `trim_${index}_${username}_${clipId}.mp4`),
+          resolve(this.basePath, `trim_${index}_${username}_${platform_id}.mp4`),
           startTime,
           endTime,
         );
 
         sourcePath = resolve(
           this.basePath,
-          `trim_${index}_${username}_${clipId}.mp4`,
+          `trim_${index}_${username}_${platform_id}.mp4`,
         );
 
         clipDuration =
@@ -254,46 +254,25 @@ class Action {
       // normalize the audio
       await this.ffmpeg.normalizeAudio(
         sourcePath,
-        resolve(this.basePath, `${index}_${username}_${clipId}.mp4`),
+        resolve(this.basePath, `${index}_${username}_${platform_id}.mp4`),
       );
       
-      const findClip = await db.clips.getOne({
-        filter: (doc) => doc.id === clipId && doc.value.videoId === this.id,
-      })
       
-      if (findClip) {
-        // update the clip in the db
-        await db.clips.update(
-          clipId,
-          {
-            source: platform!,
-            source_url: clipData.url,
-            duration: clipDuration,
-            file_path: resolve(this.basePath, `${index}_${username}_${clipId}.mp4`),
-            trim_start: startTime,
-            trim_end: endTime,
-            trim_action: trimClip,
-          },
-          { strategy: "merge" },
-        )
-
-      } else {
-        // add the clip to the db
-        await db.clips.add({
-          clip_id: clipId!,
-          videoId: this.id,
-          streamerId: streamer!.id,
-          order: index,
-          source: platform!,
-          source_url: clipData.url,
-          duration: clipDuration,
-          file_path: resolve(this.basePath, `${index}_${username}_${clipId}.mp4`),
-          trim_start: startTime,
-          trim_end: endTime,
-          trim_action: trimClip,
-          createdAt: new Date(),
-        })
-      }
+      // add the clip to the db
+      await db.clips.add({
+        videoId: this.id,
+        streamerId: streamer!.id,
+        order: index,
+        platform: platform!,
+        platform_id: platform_id!,
+        platform_url: clipData.url,
+        duration: clipDuration,
+        file_path: resolve(this.basePath, `${index}_${username}_${platform_id}.mp4`),
+        trim_start: startTime,
+        trim_end: endTime,
+        trim_action: trimClip,
+        createdAt: new Date(),
+      })
 
       // remove the temp files
       for (const file of [rawPath, sourcePath]) {
@@ -302,7 +281,7 @@ class Action {
         }
       }
 
-      await progress.console(`Downloaded / ${streamer!.value.username} ${clipId}`);
+      await progress.console(`Downloaded / ${streamer!.value.username} ${platform_id}`);
       await progress.render(completed++);
       
     }));
@@ -319,18 +298,18 @@ class Action {
   private parseClipUrl(clipUrl: string) {
     const url = new URL(clipUrl);
     let username;
-    let clipId;
+    let platform_id;
     let platform;
 
     if (url.host.includes("twitch.tv")) {
       // Split the pathname to extract username and clip ID
       const segments = url.pathname.split("/");
       username = segments[1].toLowerCase();
-      clipId = segments[3].toLowerCase();
+      platform_id = segments[3];
       platform = "twitch";
     }
 
-    return { username, clipId, platform };
+    return { username, platform_id, platform };
   }
 
   // parse the line data

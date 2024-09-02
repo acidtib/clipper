@@ -34,12 +34,12 @@ const StreamerModel = z.object({
 })
 
 const ClipModel = z.object({
-  clip_id: z.string().describe("primary"),
   videoId: z.string(),
   streamerId: z.string(),
   createdAt: z.date(),
-  source: z.string(),
-  source_url: z.string(),
+  platform: z.string(),
+  platform_id: z.string(),
+  platform_url: z.string(),
   duration: z.number(),
   order: z.number(),
   file_path: z.string().optional(),
@@ -54,9 +54,7 @@ const db = kvdex(kv, {
     idGenerator: (video) => video.video_id
   }),
   streamers: collection(StreamerModel),
-  clips: collection(ClipModel, {
-    idGenerator: (clip) => clip.clip_id
-  }),
+  clips: collection(ClipModel),
 })
 
 export { db }
