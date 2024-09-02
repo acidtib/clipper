@@ -65,7 +65,7 @@ class Action {
     for (const user of users) {
     
       const clips = await this.twitch.client.clips.getClipsForBroadcaster(user.id, {
-        limit: [1,2][Math.floor(Math.random() * 2)],
+        limit: Math.random() < 0.3 ? 2 : 1,
         startDate,
         endDate,
       });
