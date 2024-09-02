@@ -63,7 +63,8 @@ class Action {
     let newLines = [];
 
     for (const user of users) {
-    
+      
+      // TODO: ensure that clip comes from hunt showdown and not another game
       const clips = await this.twitch.client.clips.getClipsForBroadcaster(user.id, {
         limit: Math.random() < 0.3 ? 2 : 1,
         startDate,
