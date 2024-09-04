@@ -352,10 +352,6 @@ class FFmpeg {
       savePath
     ];
 
-    console.log(args.join(" "));
-
-    // return 0
-
     this.debug && console.log(args.join(" "));
   
     const command = new Deno.Command("ffmpeg", {
