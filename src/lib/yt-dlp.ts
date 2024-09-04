@@ -19,6 +19,9 @@ class YtDlp {
       "--quiet", 
       "--no-progress", 
       "--no-cache-dir",
+      "--format", "bestvideo+bestaudio/best", 
+      "--merge-output-format", "mp4", 
+      "--force-overwrites",
       "--output", this.filePath, 
       this.mediaUrl
     ]
