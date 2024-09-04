@@ -4,6 +4,7 @@ import {
   resolve,
   logger,
   Twitch,
+  config,
 } from "../../deps.ts";
 
 interface Options {
@@ -11,7 +12,7 @@ interface Options {
 }
 
 export default new Command()
-  .description("Fetch latest clips from twitch.")
+  .description("Fetch clips from twitch using list of streamers provided.")
   .arguments("<usernames...>")
   .action((options: void, ...args) => {
     const action = new Action(options as unknown as Options, ...args);
@@ -40,6 +41,8 @@ class Action {
   }
 
   async execute() {
+    const gameId = config.get<string>("twitch_game_id");
+    
     const filePath = resolve(this.basePath, "to_download.txt");
 
     // Read the file content as a string
@@ -60,21 +63,23 @@ class Action {
 
     logger.info(`Fetching Twitch clips for ${users.length} streamers. `);
 
-    let newLines = [];
+    let newLines: any[] = [];
 
     for (const user of users) {
+      let streamerClips = [];
       
-      // TODO: ensure that clip comes from hunt showdown and not another game
       const clips = await this.twitch.client.clips.getClipsForBroadcaster(user.id, {
-        limit: Math.random() < 0.3 ? 2 : 1,
+        limit: 20,
         startDate,
         endDate,
       });
       
       for (const clip of clips.data) {
-        const url = `https://www.twitch.tv/${clip.broadcasterDisplayName}/clip/${clip.id}`;
-        newLines.push(url);
+        if (clip.gameId !== gameId?.toString()) continue;
+        streamerClips.push(`v:${clip.views},https://www.twitch.tv/${clip.broadcasterDisplayName}/clip/${clip.id}`);
       }
+
+      newLines.push(...streamerClips.slice(0, Math.random() < 0.3 ? 2 : 1));
     }
 
     // Append new lines to the file
