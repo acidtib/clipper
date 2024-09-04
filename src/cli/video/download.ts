@@ -217,9 +217,8 @@ class Action {
 
       // trim the clip
       if (trimClip) {
-        logger.warn(
-          `${colors.bold.yellow.underline(this.id)} / trimming clip ${source_id} from ${startTime} to ${endTime}`,
-        );
+        await progress.console(`Trimming clip ${source_id} from ${startTime} to ${endTime}`);
+
         await this.ffmpeg.trim(
           rawPath,
           resolve(this.basePath, `trim_${index}_${username}_${source_id}.mp4`),
