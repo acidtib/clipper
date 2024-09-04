@@ -17,7 +17,7 @@ class Config {
     }
   }
 
-  // const useTransition = config.get<boolean>("use_transition"); // true or false
+  // const useTransition = config.get<boolean>("transition"); // true or false
   // const introPath = config.get<string>("intro_path"); // "./assets/media/intro.mp4"
   get<T = any>(key: string): T | undefined {
     const data = this.loadSync();

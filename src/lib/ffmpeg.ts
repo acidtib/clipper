@@ -177,12 +177,12 @@ class FFmpeg {
 
   async concat(toConcat: any[], savePath: string): Promise<number> {
 
-    const introEnabled = config.get<boolean>("use_intro");
-    const outroEnabled = config.get<boolean>("use_outro");
-    const transitionEnabled = config.get<boolean>("use_transition");
-    const frameEnabled = config.get<boolean>("use_frame");
-    const platformIconEnabled = config.get<boolean>("use_platform_icon");
-    const firstClipAsIntro = config.get<boolean>("use_first_clip_as_intro");
+    const introEnabled = config.get<boolean>("intro");
+    const outroEnabled = config.get<boolean>("outro");
+    const transitionEnabled = config.get<boolean>("transition");
+    const frameEnabled = config.get<boolean>("frame");
+    const platformIconEnabled = config.get<boolean>("platform_icon");
+    const firstClipAsIntro = config.get<boolean>("first_clip_as_intro");
 
     // TODO: add option to use custom font
     const useFont = false
