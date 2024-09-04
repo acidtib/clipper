@@ -35,7 +35,6 @@ class Action {
   basePath: string;
   downloadsFilePath: string;
   ffmpeg: FFmpeg;
-  clipList: { url: string; start: string; end: string }[];
 
   constructor(options: Options, ...args: Array<string>) {
     if (options.debug) {
@@ -63,7 +62,6 @@ class Action {
 
     this.ffmpeg = new FFmpeg(this.options.quality, this.options.device, this.options.debug);
 
-    this.clipList = [];
   }
 
   async execute() {
@@ -164,8 +162,6 @@ class Action {
       let trimClip = false;
 
       this.options.debug && logger.warn(colors.bold.green(`[DEBUG:]`), clipData);
-
-      // this.clipList.push(clipData);
 
       const { source_id, username, source } = this.parseClipUrl(clipData);
 

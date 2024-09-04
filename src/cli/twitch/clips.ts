@@ -76,7 +76,7 @@ class Action {
       
       for (const clip of clips.data) {
         if (clip.gameId !== gameId?.toString()) continue;
-        streamerClips.push(`v:${clip.views},https://www.twitch.tv/${clip.broadcasterDisplayName}/clip/${clip.id}`);
+        streamerClips.push(`https://www.twitch.tv/${clip.broadcasterDisplayName}/clip/${clip.id}`);
       }
 
       newLines.push(...streamerClips.slice(0, Math.random() < 0.3 ? 2 : 1));
