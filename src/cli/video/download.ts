@@ -89,6 +89,9 @@ class Action {
           { step: "download" },
           { strategy: "merge" },
         )
+
+        // clean up any previous clips from video
+        Deno.removeSync(this.basePath, { recursive: true });
       } else {
         logger.info(
           `${colors.bold.yellow.underline(this.id)} / Video id already exists. Use --force to overwrite it.`,
@@ -115,11 +118,10 @@ class Action {
     }
 
 
-    // clean up any clips from video in db
+    // clean up any previous clips from video
     await db.clips.deleteMany({
       filter: (doc) => doc.value.videoId === this.id,
     })
-
 
     let content;
     try {
