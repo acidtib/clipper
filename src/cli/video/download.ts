@@ -326,7 +326,7 @@ class Action {
         end = part.substring(2);
 
       // url
-      } else if (part.startsWith("https://")) {
+      } else if (part.startsWith("https://") || part.startsWith("http://")) {
         url = part;
 
       // username
