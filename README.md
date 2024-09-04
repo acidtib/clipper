@@ -52,7 +52,7 @@ sudo apt update && sudo apt upgrade
 sudo apt install ffmpeg
 
 # Install FFmpeg-normalize
-python -m pip install --no-deps -U ffmpeg-normalize
+pip3 install ffmpeg-normalize
 
 # Install yt-dlp
 curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o ~/.local/bin/yt-dlp

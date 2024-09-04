@@ -146,28 +146,7 @@ class Action {
       return;
     }
 
-    // process the streamers and add them to the db
-    let streamersList = [];
-    // parse line and get streamer data
-    for (const line of lines) {
-      const clipData = this.parseLine(line);
-      const { username, platform } = this.parseClipUrl(clipData.url);
-      streamersList.push({ username: username!, platform: platform!, platform_id: "twitch_id" });
-    }
-
     // add streamers to db
-    Array.from(new Map(streamersList.map((s) => [`${s.username}_${s.platform}`, s])).values()).forEach(async item => {
-      // check if streamer exists
-      const result = await db.streamers.getOne({
-        filter: (doc) => doc.value.username === item.username && doc.value.platform === item.platform,
-      })
-      if (!result) {
-        // add streamer
-        await db.streamers.add(item)
-      }
-    });
-    
-
     // download each clip and normalize the audio
     const total = lines.length;
     let completed = 0;
@@ -178,23 +157,32 @@ class Action {
 
     await progress.render(0)
 
-    await Promise.all(lines.map(async (line, index) => {
+    for (const [index, line] of lines.entries()) {
       let clipData = this.parseLine(line);
       let trimClip = false;
 
       this.options.debug && logger.warn(colors.bold.green(`[DEBUG:]`), clipData);
 
-      this.clipList.push(clipData);
+      // this.clipList.push(clipData);
 
-      const { platform_id, username, platform } = this.parseClipUrl(clipData.url);
+      const { source_id, username, source } = this.parseClipUrl(clipData);
 
-      const streamer = await db.streamers.getOne({
-        filter: (doc) => doc.value.username === username && doc.value.platform === platform,
+      // check if streamer exists
+      let streamer = await db.streamers.getOne({
+        filter: (doc) => doc.value.username === username && doc.value.platform === source,
       })
+      if (!streamer) {
+        // add streamer
+        streamer = await db.streamers.add({
+          username,
+          platform: source,
+          platform_id: source_id,
+        })
+      }
 
       const rawPath = resolve(
         this.basePath,
-        `raw_${index}_${username}_${platform_id}.mp4`,
+        `raw_${index}_${username}_${source_id}.mp4`,
       );
       let sourcePath = rawPath;
 
@@ -218,9 +206,7 @@ class Action {
 
       this.options.debug && logger.warn(colors.bold.green(`[DEBUG:]`), clipData);
 
-      if (startTime !== 0 || endTime !== clipDuration) {
-        trimClip = true;
-      }
+      if (startTime !== 0 || endTime !== clipDuration) trimClip = true;
 
       if (this.options.debug) {
         console.log("startTime", startTime);
@@ -229,45 +215,42 @@ class Action {
         console.log("trimClip", trimClip);
       }
 
+      // trim the clip
       if (trimClip) {
-        // trim the clip
         logger.warn(
-          `${colors.bold.yellow.underline(this.id)} / trimming clip ${platform_id} from ${startTime} to ${endTime}`,
+          `${colors.bold.yellow.underline(this.id)} / trimming clip ${source_id} from ${startTime} to ${endTime}`,
         );
         await this.ffmpeg.trim(
           rawPath,
-          resolve(this.basePath, `trim_${index}_${username}_${platform_id}.mp4`),
+          resolve(this.basePath, `trim_${index}_${username}_${source_id}.mp4`),
           startTime,
           endTime,
         );
 
         sourcePath = resolve(
           this.basePath,
-          `trim_${index}_${username}_${platform_id}.mp4`,
+          `trim_${index}_${username}_${source_id}.mp4`,
         );
 
-        clipDuration =
-          Math.floor((await this.ffmpeg.getAudioDuration(sourcePath)) * 1000) /
-          1000;
+        clipDuration = Math.floor((await this.ffmpeg.getAudioDuration(sourcePath)) * 1000) / 1000;
       }
 
       // normalize the audio
       await this.ffmpeg.normalizeAudio(
         sourcePath,
-        resolve(this.basePath, `${index}_${username}_${platform_id}.mp4`),
+        resolve(this.basePath, `${index}_${username}_${source_id}.mp4`),
       );
-      
-      
+
       // add the clip to the db
       await db.clips.add({
         videoId: this.id,
         streamerId: streamer!.id,
         order: index,
-        platform: platform!,
-        platform_id: platform_id!,
+        platform: source!,
+        platform_id: source_id!,
         platform_url: clipData.url,
         duration: clipDuration,
-        file_path: resolve(this.basePath, `${index}_${username}_${platform_id}.mp4`),
+        file_path: resolve(this.basePath, `${index}_${username}_${source_id}.mp4`),
         trim_start: startTime,
         trim_end: endTime,
         trim_action: trimClip,
@@ -281,35 +264,48 @@ class Action {
         }
       }
 
-      await progress.console(`Downloaded / ${streamer!.value.username} ${platform_id}`);
+      await progress.console(`Downloaded / ${username} ${source_id}`);
       await progress.render(completed++);
-      
-    }));
+
+    }
 
     await progress.render(lines.length);
 
     logger.info(
-      `${colors.bold.yellow.underline(this.id)} / Done downloading ${this.clipList.length} clips`,
+      `${colors.bold.yellow.underline(this.id)} / Done downloading ${lines.length} clips`,
     );
 
   }
 
   // parse username and clip ID from the URL
-  private parseClipUrl(clipUrl: string) {
-    const url = new URL(clipUrl);
-    let username;
-    let platform_id;
-    let platform;
+  private parseClipUrl(clipData: any = {}) {
+    const url = new URL(clipData.url);
+    let username = clipData.username || "";
+    let source_id;
+    let source = clipData.source || "";
 
+    // Split the pathname to extract username and clip ID
     if (url.host.includes("twitch.tv")) {
-      // Split the pathname to extract username and clip ID
       const segments = url.pathname.split("/");
       username = segments[1].toLowerCase();
-      platform_id = segments[3];
-      platform = "twitch";
+      source_id = segments[3];
+      if (!clipData.source) {
+        source = "twitch";
+      }
+    } else if (url.host.includes("youtube.com")) {
+      if (!username) {
+        throw new Error("Youtube clips require a username to be set using u:username");
+      }
+      const searchParams = new URLSearchParams(url.search);
+      source_id = searchParams.get("v");
+      if (!clipData.source) {
+        source = "youtube";
+      }
+    } else {
+      throw new Error(`Unsupported source: ${url.host}`);
     }
 
-    return { username, platform_id, platform };
+    return { username, source_id, source };
   }
 
   // parse the line data
@@ -318,17 +314,32 @@ class Action {
     let start = "00:00:00.000";
     let end = "00:00:00.000";
     let url = "";
+    let username = "";
+    let source = "";
 
     parts.forEach((part) => {
+      // start time
       if (part.startsWith("s:")) {
         start = part.substring(2);
+
+      // end time
       } else if (part.startsWith("e:")) {
         end = part.substring(2);
+
+      // url
       } else if (part.startsWith("https://")) {
         url = part;
+
+      // username
+      } else if (part.startsWith("u:")) {
+        username = part.substring(2);
+
+      // source
+      } else if (part.startsWith("p:")) {
+        source = part.substring(2);
       }
     });
 
-    return { start, end, url };
+    return { start, end, url, username, source };
   }
 }
