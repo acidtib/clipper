@@ -219,7 +219,7 @@ class Action {
 
       // trim the clip
       if (trimClip) {
-        await progress.console(`Trimming clip ${source_id} from ${startTime} to ${endTime}`);
+        await progress.console(`Trimming clip / ${username} - ${source_id} from ${startTime} to ${endTime}`);
 
         await this.ffmpeg.trim(
           rawPath,
@@ -265,7 +265,7 @@ class Action {
         }
       }
 
-      await progress.console(`Downloaded / ${username} ${source_id}`);
+      await progress.console(`Downloaded / ${username} - ${source_id}`);
       await progress.render(completed++);
 
     }

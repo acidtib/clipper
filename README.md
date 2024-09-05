@@ -9,6 +9,12 @@ Example video compilations can be found at [https://www.youtube.com/watch?v=rDKz
 - **Transitions**: Smoothly transition between clips.
 - **Video Frame Overlay**: Apply a custom frame around your video.
 
+<div align="center">
+
+<img src="https://raw.githubusercontent.com/acidtib/clipper/main/docs/clipper-animation.gif" alt="clipper in action" width="100%"/>
+
+</div>
+
 ## Installation
 
 ### Prerequisites
