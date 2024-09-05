@@ -248,7 +248,8 @@ class FFmpeg {
       const isTransition = item === transitionPath;
 
       if (isClip) {
-        streamer = await db.streamers.find(item.value.streamerId)
+        const itemValue = item as any;
+        streamer = await db.streamers.find(itemValue.value.streamerId)
       }
 
       // add intro if enabled
@@ -273,7 +274,7 @@ class FFmpeg {
         // clip with frame
         videoFilters += `[${filterIndex}:v]scale=2276x1280[scaled_video${i+1}];[${filterIndex += 1}:v]scale=2560:1440,drawtext=`
         if (useFont) videoFilters += `fontfile=assets/fonts/GT-Sectra-Fine-Medium.ttf:`
-        videoFilters += `text='${streamer.value.username.toUpperCase()}'` // username text
+        videoFilters += `text='${streamer?.value.username.toUpperCase()}'` // username text
 
         audioFilters += `[${filterIndex - 1}:a]asetpts=PTS-STARTPTS[a${i}];`;
 
@@ -292,7 +293,7 @@ class FFmpeg {
         if (platformIconEnabled) {
           videoFilters += `[${filterIndex}:v]setpts=PTS-STARTPTS,settb=AVTB,scale=2560:1440:force_original_aspect_ratio=decrease,pad=2560:1440:-1:-1,setsar=1,drawtext=`
           if (useFont) videoFilters += `fontfile=assets/fonts/GT-Sectra-Fine-Medium.ttf:`
-          videoFilters += `text='${streamer.value.username.toUpperCase()}':box=1:boxcolor=black@0.6:boxborderw=5:`; // username text
+          videoFilters += `text='${streamer?.value.username.toUpperCase()}':box=1:boxcolor=black@0.6:boxborderw=5:`; // username text
           videoFilters += `x=120:y=26:fontsize=65:fontcolor=#e7e7d7[v${i}];`; // overlay placement of the username
           videoFilters += `[v${i}][${filterIndex += 1}:v]overlay=x=30:y=20[v${i}];`; // overlay placement of the platform icon
           audioFilters += `[${filterIndex - 1}:a]asetpts=PTS-STARTPTS[a${i}];`;
@@ -300,7 +301,7 @@ class FFmpeg {
         } else {
           videoFilters += `[${filterIndex}:v]setpts=PTS-STARTPTS,settb=AVTB,scale=2560:1440:force_original_aspect_ratio=decrease,pad=2560:1440:-1:-1,setsar=1,drawtext=`
           if (useFont) videoFilters += `fontfile=assets/fonts/GT-Sectra-Fine-Medium.ttf:`
-          videoFilters += `text='${streamer.value.username.toUpperCase()}':box=1:boxcolor=black@0.6:boxborderw=5:`; // username text
+          videoFilters += `text='${streamer?.value.username.toUpperCase()}':box=1:boxcolor=black@0.6:boxborderw=5:`; // username text
           videoFilters += `x=30:y=20:fontsize=65:fontcolor=#e7e7d7[v${i}];`; // overlay placement of the username
           audioFilters += `[${filterIndex}:a]asetpts=PTS-STARTPTS[a${i}];`;
           filterOutputs += `[v${i}][a${i}]`;
@@ -321,7 +322,7 @@ class FFmpeg {
     const args = [
       "-y",
       "-loglevel", "error",
-      ...adjustedFileList.flatMap(file => typeof file === "string" ? ["-i", file] : ["-i", file.value.file_path]),
+      ...adjustedFileList.flatMap(file => typeof file === "string" ? ["-i", file] : ["-i", (file as { value: { file_path: string } }).value.file_path]),
       "-filter_complex", `${filterComplex}`,
       "-map", "[outv]",
       "-map", "[outa]",

@@ -57,4 +57,8 @@ const db = kvdex(kv, {
   clips: collection(ClipModel),
 })
 
-export { db }
+export { 
+  db, 
+  type Clip,
+  type Streamer
+};

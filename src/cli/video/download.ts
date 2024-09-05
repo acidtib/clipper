@@ -165,17 +165,21 @@ class Action {
 
       const { source_id, username, source } = this.parseClipUrl(clipData);
 
-      // check if streamer exists
-      let streamer = await db.streamers.getOne({
+      // Check if streamer exists
+      let streamer
+      const streamerResult = await db.streamers.getOne({
         filter: (doc) => doc.value.username === username && doc.value.platform === source,
-      })
-      if (!streamer) {
-        // add streamer
+      });
+
+      // If streamer does not exist, add streamer
+      if (!streamerResult) {
         streamer = await db.streamers.add({
           username,
-          platform: source,
-          platform_id: source_id,
-        })
+          platform: source!,
+          platform_id: source_id!,
+        });
+      } else {
+        streamer = streamerResult;
       }
 
       const rawPath = resolve(
@@ -241,7 +245,7 @@ class Action {
       // add the clip to the db
       await db.clips.add({
         videoId: this.id,
-        streamerId: streamer!.id,
+        streamerId: (streamer as any).id,
         order: index,
         platform: source!,
         platform_id: source_id!,
