@@ -1,3 +1,4 @@
+
 # clipper
 
 Easily create video compilations from Twitch clips with **clipper**. This CLI tool downloads clips and merges them into a single video. Customize your compilation with optional features such as:
@@ -24,7 +25,6 @@ Before installing clipper, ensure you have the following dependencies:
 - [FFmpeg](https://ffmpeg.org/)
 - [FFmpeg-normalize](https://github.com/slhck/ffmpeg-normalize)
 - [yt-dlp](https://github.com/yt-dlp/yt-dlp)
-
 
 #### Windows
 1. **Install Chocolatey**: Follow the instructions [here](https://chocolatey.org/install) to install Chocolatey.
@@ -79,45 +79,138 @@ python -m pip install -U ffmpeg-normalize
 brew install yt-dlp
 ```
 
-### Usage
-#### Initialize Configuration
+## Usage
+
+### General Usage
+
+```bash
+clipper
+```
+
+#### Description:
+
+CLI for Bloodline Ranks Youtube videos.
+
+#### Options:
+
+- `-h, --help`     - Show this help.
+- `-d, --debug`    - Run in debug mode.
+- `-v, --version`  - Output the version number.
+
+#### Commands:
+
+- `init`               - Create local directory structure and config files.
+- `video`              - Create and render a video.
+- `twitch`             - Work with Twitch data.
+- `help [command]`     - Show this help or the help of a sub-command.
+
+### Initialize Configuration
 
 Create a configuration environment and file:
 ```bash
 clipper init
 ```
 
-Modify global settings in the config.yml file.
+Modify global settings in the `config.yml` file.
 
-Edit file `to_download.txt` with the links of the clips you want to download
+Edit file `to_download.txt` with the links of the clips you want to download.
 
-#### Manage Clips
-1. **Download Clips**: Edit the to_download.txt file with the links to the clips you want to download. Then use:
-```bash
-clipper video download <id>
-```
-- Replace `<id>` with a unique identifier for the video in your local database.
+#### Options:
 
-2. **Render Compilation**: Render the video using the ID of the downloaded clips:
-```bash
-clipper video render <id>
-```
+- `-h, --help`   - Show this help.
+- `-d, --debug`  - Run in debug mode.
 
-3. **Get Video Information**: Retrieve information about a video from the local database:
-```bash
-clipper video info <id>
-```
+### Manage Clips
 
-#### Other Commands
-**List Videos**: List all videos in the local database:
+#### 1. List Videos
+
+List all videos in the local database:
 ```bash
 clipper video list
 ```
 
-**Get Twitch Clip**: Fetch clips from list of Twitch users, urls are added to `to_download.txt`
+##### Options:
+
+- `--device <device>`  - Device to use (Default: "cpu").
+- `--quality <quality>` - Quality to use (Default: "high").
+- `--force`            - Force action (Default: false).
+- `-h, --help`         - Show this help.
+- `-d, --debug`        - Run in debug mode.
+
+#### 2. Get Video Information
+
+Retrieve information about a video from the local database:
 ```bash
-clipper twitch get chiyo agent3540
+clipper video info <id>
 ```
 
+##### Options:
+
+- `--device <device>`  - Device to use (Default: "cpu").
+- `--quality <quality>` - Quality to use (Default: "high").
+- `--force`            - Force action (Default: false).
+- `-h, --help`         - Show this help.
+- `-d, --debug`        - Run in debug mode.
+
+#### 3. Download Clips
+
+Download clips from `to_download.txt`:
+```bash
+clipper video download <id>
+```
+
+##### Options:
+
+- `--device <device>`  - Device to use (Default: "cpu").
+- `--quality <quality>` - Quality to use (Default: "high").
+- `--force`            - Force action (Default: false).
+- `-h, --help`         - Show this help.
+- `-d, --debug`        - Run in debug mode.
+
+#### 4. Render Compilation
+
+Render the video using the ID of the downloaded clips:
+```bash
+clipper video render <id>
+```
+
+##### Options:
+
+- `--device <device>`  - Device to use (Default: "cpu").
+- `--quality <quality>` - Quality to use (Default: "high").
+- `--force`            - Force action (Default: false).
+- `-h, --help`         - Show this help.
+- `-d, --debug`        - Run in debug mode.
+
+### Twitch Commands
+
+#### 1. Fetch Twitch Clips
+
+Fetch clips from Twitch using a list of streamers provided:
+```bash
+clipper twitch clips <usernames...>
+```
+
+##### Options:
+
+- `--force`    - Force action (Default: false).
+- `-h, --help` - Show this help.
+- `-d, --debug` - Run in debug mode.
+- `--merge`    - Merge links into current list (Default: false).
+
+#### 2. Get Game Data
+
+Get game data for the given game name:
+```bash
+clipper twitch games <game_name>
+```
+
+##### Options:
+
+- `--force`    - Force action (Default: false).
+- `-h, --help` - Show this help.
+- `-d, --debug` - Run in debug mode.
+
 ## Contributing
+
 Feel free to submit issues or pull requests if you have suggestions or improvements.
