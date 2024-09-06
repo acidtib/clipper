@@ -284,7 +284,7 @@ class Action {
     let username = clipData.username || "";
     let source_id;
     let source = clipData.source || "";
-
+    
     // Split the pathname to extract username and clip ID
     if (url.host.includes("twitch.tv")) {
       const segments = url.pathname.split("/");
@@ -301,6 +301,15 @@ class Action {
       source_id = searchParams.get("v");
       if (!clipData.source) {
         source = "youtube";
+      }
+    } else if (url.host.includes("medal.tv")) {
+      if (!username) {
+        throw new Error("medal.tv clips require a username to be set using u:username");
+      }
+      const segments = url.pathname.split("/");
+      source_id = segments[4];
+      if (!clipData.source) {
+        source = "medal.tv";
       }
     } else {
       throw new Error(`Unsupported source: ${url.host}`);
