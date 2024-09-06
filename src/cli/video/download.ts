@@ -8,21 +8,24 @@ import {
   YtDlp,
   FFmpeg,
   db,
+  VLC
 } from "../../deps.ts";
 
 import ProgressBar from "https://deno.land/x/progress@v1.4.9/mod.ts";
 
 interface Options {
   debug?: boolean;
-  force: boolean;
-  device: string;
-  quality: string;
+  force?: boolean;
+  device?: string;
+  quality?: string;
+  vlc: boolean;
 }
 
 const command = new Command()
   .description("Download clips from to_download.txt")
   .arguments("<id:string>")
-  .action((options: void, ...args) => {
+  .option("--vlc", "Open clips in vlc player.", { default: false })
+  .action((options: Options, ...args) => {
     const action = new Action(options as unknown as Options, ...args);
     return action.execute();
   });
@@ -275,6 +278,11 @@ class Action {
     logger.info(
       `${colors.bold.yellow.underline(this.id)} / Done downloading ${lines.length} clips`,
     );
+
+    // open the playlist in vlc
+    if (this.options.vlc) {
+      new VLC().openPlayList(this.basePath);
+    }
 
   }
 

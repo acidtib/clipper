@@ -166,6 +166,7 @@ clipper video download <id>
 - `--force`            - Force action (Default: false).
 - `-h, --help`         - Show this help.
 - `-d, --debug`        - Run in debug mode.
+- `--vlc`              - Open clips in vlc player.  (Default: false)
 
 #### 4. Render Compilation
 
