@@ -1,11 +1,7 @@
-import {
-  parseYaml,
-  resolve,
-} from "../deps.ts";
+import { parseYaml, resolve } from "../deps.ts";
 
 class Config {
-  constructor() {
-  }
+  constructor() {}
 
   private loadSync(): Record<string, any> {
     const configPath = resolve("./", "config.yml");
@@ -13,7 +9,12 @@ class Config {
       const configContent = Deno.readTextFileSync(configPath);
       return parseYaml(configContent) as Record<string, any>;
     } catch (error) {
-      throw new Error("Failed to load configuration from ${configPath}", error);
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+
+      throw new Error(
+        `Failed to load configuration from ${configPath}: ${errorMessage}`,
+      );
     }
   }
 
