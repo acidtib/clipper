@@ -79,6 +79,14 @@ python -m pip install -U ffmpeg-normalize
 brew install yt-dlp
 ```
 
+## Install clipper
+
+#### Linux
+```
+curl -L https://github.com/acidtib/clipper/releases/latest/download/clipper-x86_64-linux-gnu -o ~/.local/bin/clipper
+chmod a+rx ~/.local/bin/clipper
+```
+
 ## Usage
 
 ### General Usage
