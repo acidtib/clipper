@@ -58,7 +58,7 @@ sudo apt update && sudo apt upgrade
 sudo apt install ffmpeg
 
 # Install FFmpeg-normalize
-pip3 install ffmpeg-normalize
+pipx install ffmpeg-normalize
 
 # Install yt-dlp
 curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o ~/.local/bin/yt-dlp
