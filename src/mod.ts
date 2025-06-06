@@ -1,12 +1,12 @@
 import { Command, HelpCommand } from "./deps.ts";
 
+// ensures database is created
+import "./lib/db.ts";
+
 // commands
 import initCommand from "./cli/init.ts";
 import videoCommand from "./cli/video.ts";
 import twitchCommand from "./cli/twitch.ts";
-
-// ensures database is created
-import "./lib/db.ts";
 
 const command = new Command()
   .name("clipper")

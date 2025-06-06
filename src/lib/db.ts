@@ -5,7 +5,7 @@ import {
   ulid
 } from "../deps.ts";
 
-import { kvdex, model, collection } from "jsr:@olli/kvdex"
+import { kvdex, model, collection } from "@olli/kvdex"
 
 const dbDir = resolve("./", "assets", "database"); 
 const dbPath = resolve(dbDir, "kv.sqlite3"); 
@@ -49,13 +49,16 @@ const ClipModel = z.object({
 });
 
 // schema
-const db = kvdex(kv, {
-  videos: collection(VideoModel, {
-    idGenerator: (video) => video.video_id
-  }),
-  streamers: collection(StreamerModel),
-  clips: collection(ClipModel),
-})
+const db = kvdex({
+  kv: kv, 
+  schema: {
+    videos: collection(VideoModel, {
+      idGenerator: (video) => video.video_id
+    }),
+    streamers: collection(StreamerModel),
+    clips: collection(ClipModel),
+  }
+});
 
 export { 
   db, 
