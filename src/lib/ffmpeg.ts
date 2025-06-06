@@ -312,9 +312,12 @@ class FFmpeg {
         audioFilters += `[${filterIndex - 1}:a]asetpts=PTS-STARTPTS[a${i}];`;
 
         if (platformIconEnabled) {
+          // Get platform-specific Y position for icon (relative to main height)
+          const iconYOffset = streamer?.value.platform === 'youtube' ? 46 : 44;
+          
           videoFilters += `:x=224:y=h-th-58:fontsize=60:fontcolor=#e7e7d7[overlay];`; // overlay placement of the username
           videoFilters += `[overlay][scaled_video${i+1}]overlay=x=142:y=0[v${i}];`; // overlay placement of the frame
-          videoFilters += `[v${i}][${filterIndex += 1}:v]overlay=x=142:y=main_h-overlay_h-44[v${i}];`; // overlay placement of the platform icon
+          videoFilters += `[v${i}][${filterIndex += 1}:v]overlay=x=142:y=main_h-overlay_h-${iconYOffset}[v${i}];`; // overlay placement of the platform icon
         } else {
           videoFilters += `:x=142:y=h-th-58:fontsize=60:fontcolor=#e7e7d7[overlay];`; // overlay placement of the username
           videoFilters += `[overlay][scaled_video${i+1}]overlay=x=142:y=0[v${i}];`; // overlay placement of the frame
@@ -324,11 +327,14 @@ class FFmpeg {
       } else if (isClip) {
         // normal clip
         if (platformIconEnabled) {
+          // Get platform-specific Y position for icon
+          const iconY = streamer?.value.platform === 'youtube' ? 17 : 20;
+          
           videoFilters += `[${filterIndex}:v]setpts=PTS-STARTPTS,settb=AVTB,scale=2560:1440:force_original_aspect_ratio=decrease,pad=2560:1440:-1:-1,setsar=1,drawtext=`
           videoFilters += `fontfile=${fontPath}:`
           videoFilters += `text='${streamer?.value.username.toUpperCase()}':box=1:boxcolor=black@0.6:boxborderw=5:`; // username text
           videoFilters += `x=120:y=26:fontsize=65:fontcolor=#e7e7d7[v${i}];`; // overlay placement of the username
-          videoFilters += `[v${i}][${filterIndex += 1}:v]overlay=x=30:y=20[v${i}];`; // overlay placement of the platform icon
+          videoFilters += `[v${i}][${filterIndex += 1}:v]overlay=x=30:y=${iconY}[v${i}];`; // overlay placement of the platform icon
           audioFilters += `[${filterIndex - 1}:a]asetpts=PTS-STARTPTS[a${i}];`;
           filterOutputs += `[v${i}][a${i}]`;
         } else {
