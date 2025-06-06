@@ -1,5 +1,10 @@
 import { Command, HelpCommand } from "./deps.ts";
 
+// commands
+import initCommand from "./cli/init.ts";
+import videoCommand from "./cli/video.ts";
+import twitchCommand from "./cli/twitch.ts";
+
 // ensures database is created
 import "./lib/db.ts";
 
@@ -14,22 +19,13 @@ const command = new Command()
   .option("-v, --version", "Output the version number", {
     standalone: true,
     action: () => {
-      console.log("0.0.3");
+      console.log("clipper v0.0.3");
     },
   });
 
 command
-  .command(
-    "init",
-    (await import("./cli/init.ts")).default as unknown as Command,
-  )
-  .command(
-    "video",
-    (await import("./cli/video.ts")).default as unknown as Command,
-  )
-  .command(
-    "twitch",
-    (await import("./cli/twitch.ts")).default as unknown as Command,
-  )
+  .command("init", initCommand)
+  .command("video", videoCommand)
+  .command("twitch", twitchCommand)
   .command("help", new HelpCommand())
   .parse(Deno.args);
