@@ -47,7 +47,7 @@ class Action {
     
     const filePath = resolve(this.basePath, "to_download.txt");  
 
-    const hoursAgo = 168; // 7 days
+    const hoursAgo = 192; // 8 days
     const startDate = new Date(Date.now() - hoursAgo * 60 * 60 * 1000).toISOString();
     const endDate = new Date().toISOString();
 
@@ -73,8 +73,8 @@ class Action {
         streamerClips.push(`https://www.twitch.tv/${clip.broadcasterDisplayName}/clip/${clip.id}\n`);
       }
 
-      // Add 1-2 random clips with 30% probability of being 2
-      newLines.push(...streamerClips.slice(0, Math.random() < 0.3 ? 2 : 1));
+      // Add 1-2 random clips with 20% probability of being 2
+      newLines.push(...streamerClips.slice(0, Math.random() < 0.2 ? 2 : 1));
     }
 
     if (newLines.length === 0) {
