@@ -24,6 +24,8 @@
     "@std/path": "jsr:@std/path@^1.1.0",
     "@std/ulid": "jsr:@std/ulid@^1.0.0",
     "@std/yaml": "jsr:@std/yaml@^1.0.7",
+    "@twurple/api": "npm:@twurple/api@^7.3.0",
+    "@twurple/auth": "npm:@twurple/auth@^7.3.0",
     "zod": "npm:zod@^3.25.53"
   }
 }

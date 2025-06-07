@@ -1,7 +1,7 @@
 import { config } from "../lib/config.ts";
 
-import { AppTokenAuthProvider } from 'npm:@twurple/auth';
-import { ApiClient } from 'npm:@twurple/api';
+import { AppTokenAuthProvider } from "@twurple/auth";
+import { ApiClient } from "@twurple/api";
 
 export class Twitch {
   client: ApiClient;
