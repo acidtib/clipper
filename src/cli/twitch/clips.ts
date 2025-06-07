@@ -10,12 +10,14 @@ import {
 interface Options {
   debug?: boolean
   merge: boolean
+  limit: number
 }
 
 export default new Command()
   .description("Fetch clips from twitch using list of streamers provided.")
   .arguments("<usernames...>")
   .option("--merge", "Merge links into current list.", { default: false })
+  .option("--limit <value:number>", "Limit the number of clips to fetch.", { default: 2 })
   .action((options: Options, ...args) => {
     const action = new Action(options as unknown as Options, ...args);
     return action.execute();
@@ -27,7 +29,6 @@ class Action {
   usernames
   basePath: string;
   twitch: Twitch
-
   constructor(options: Options, ...args: Array<string>) {
     if (options.debug) {
       logger.warn(`${colors.bold.green("[DEBUG:]")} / options:`, options);
@@ -38,7 +39,6 @@ class Action {
 
     this.usernames = args
     this.basePath = resolve("./")
-    
     this.twitch = new Twitch(Twitch.getClientId(), Twitch.getClientSecret());
   }
 
@@ -46,7 +46,7 @@ class Action {
     if (clips.length === 0) return [];
     
     // Return top 2 clips, or all available clips if less than 2
-    return clips.slice(0, Math.min(2, clips.length));
+    return clips.slice(0, Math.min(this.options.limit, clips.length));
   }
 
   async execute() {
@@ -83,7 +83,7 @@ class Action {
       // Sort clips by views in descending order (highest views first)
       streamerClips.sort((a, b) => b.views - a.views);
       
-      // Select top 2 viewed clips
+      // Select top viewed clips, based on the limit
       const selectedClips = this.selectClips(streamerClips);
       clipsList.push(...selectedClips);
     }
@@ -92,9 +92,6 @@ class Action {
       logger.info("No clips found. Exiting.");
       Deno.exit();
     }
-
-    // sort final list by views, keep top first and randomize the rest
-    clipsList.sort((a, b) => b.views - a.views);
     
     const newLines = clipsList.map(clip => `v:${clip.views},https://www.twitch.tv/${clip.broadcasterDisplayName}/clip/${clip.id}\n`);
 
