@@ -19,7 +19,7 @@ const command = new Command()
   .option("-v, --version", "Output the version number", {
     standalone: true,
     action: () => {
-      console.log("clipper v0.0.3");
+      console.log("clipper v0.0.4");
     },
   });
 
