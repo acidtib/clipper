@@ -18,7 +18,7 @@ jobs:
       - name: Setup Deno
         uses: denoland/setup-deno@v2
         with:
-          deno-version: "2.2.11"
+          deno-version: "2.3.5"
 
       - name: Build Clipper CLI for Linux
         run: |
