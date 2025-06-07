@@ -184,21 +184,42 @@ class FFmpeg {
     const platformIconEnabled = config.get<boolean>("platform_icon");
     const firstClipAsIntro = config.get<boolean>("first_clip_as_intro");
 
-    // TODO: add option to use custom font
-    const useFont = false
+    // Font configuration
+    const useCustomFont = config.get<boolean>("custom_font") || false;
+    const customFontPath = config.get<string>("custom_font_path") || "";
+    
+    // OS-specific default fonts
+    const getDefaultFont = () => {
+      const os = Deno.build.os;
+      switch (os) {
+        case "windows":
+          return "C:/Windows/Fonts/arial.ttf";
+        case "darwin": // macOS
+          return "/System/Library/Fonts/Arial.ttf";
+        default: // linux
+          return "/usr/share/fonts/truetype/dejavu/DejaVuSerif-Bold.ttf";
+      }
+    };
+    
+    // Determine which font to use
+    const fontPath = useCustomFont ? resolve(customFontPath) : getDefaultFont();
   
     const introPath = introEnabled ? resolve(config.get<string>("intro_path")!) : null;
     const outroPath = outroEnabled ? resolve(config.get<string>("outro_path")!) : null;
     const transitionPath = transitionEnabled ? resolve(config.get<string>("transition_path")!) : null;
     const framePath = resolve(config.get<string>("frame_path")!);
-    const iconTwitchPath = resolve(config.get<string>("platform_icon_path")!);
+    const iconTwitchPath = platformIconEnabled ? resolve(config.get<string>("platform_icon_twitch_path")!) : "";
+    const iconYoutubePath = platformIconEnabled ? resolve(config.get<string>("platform_icon_youtube_path")!) : "";
 
     // Build the adjusted file list
     let adjustedFileList: string[] = [];
 
     if (introEnabled) adjustedFileList.push(introPath!);
 
-    toConcat.forEach((clip, i) => {
+    // Build file list with platform-specific icons
+    for (let i = 0; i < toConcat.length; i++) {
+      const clip = toConcat[i];
+      
       // add clip object to list
       adjustedFileList.push(clip);
 
@@ -207,7 +228,19 @@ class FFmpeg {
         adjustedFileList.push(framePath);
       }
       
-      if (platformIconEnabled) adjustedFileList.push(iconTwitchPath);
+      if (platformIconEnabled) {
+        // Get the streamer to determine the platform
+        const streamer = await db.streamers.find(clip.value.streamerId);
+        const platform = streamer?.value.platform || 'twitch';
+        
+        // Add the appropriate icon based on platform
+        if (platform === 'youtube') {
+          adjustedFileList.push(iconYoutubePath);
+        } else {
+          // Default to Twitch icon for any other platform
+          adjustedFileList.push(iconTwitchPath);
+        }
+      }
 
       // add transition if enabled
       if (transitionEnabled && i < toConcat.length - 1) {
@@ -215,7 +248,7 @@ class FFmpeg {
           adjustedFileList.push(transitionPath!);  
         }
       }
-    });
+    }
 
     if (outroEnabled) adjustedFileList.push(outroPath!);
    
@@ -238,7 +271,7 @@ class FFmpeg {
       adjustedFileList.splice(movePosition, 0, firstElement);
     }
 
-    const adjustedForFilters = adjustedFileList.filter(item => item !== framePath).filter(item => item !== iconTwitchPath)
+    const adjustedForFilters = adjustedFileList.filter(item => item !== framePath).filter(item => item !== iconTwitchPath).filter(item => item !== iconYoutubePath)
     
     for (const [i, item] of adjustedForFilters.entries()) {
       const isClip = typeof item === "object"
@@ -255,7 +288,7 @@ class FFmpeg {
       // add intro if enabled
       if (isIntro) {
         videoFilters += `[${filterIndex}:v]setpts=PTS-STARTPTS,settb=AVTB,scale=2560:1440:force_original_aspect_ratio=decrease,pad=2560:1440:-1:-1,setsar=1,drawtext=`;
-        if (useFont) videoFilters += `fontfile=assets/fonts/GT-Sectra-Fine-Medium.ttf:`
+        videoFilters += `fontfile=${fontPath}:`
         videoFilters += `text='${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}'`; // intro text
         videoFilters += `:x=(w-text_w)/2:y=1000:fontsize=100:fontcolor=#e7e7d7[v${i}];`; // intro position
       }
@@ -273,15 +306,18 @@ class FFmpeg {
       if (isClip && frameEnabled) {       
         // clip with frame
         videoFilters += `[${filterIndex}:v]scale=2276x1280[scaled_video${i+1}];[${filterIndex += 1}:v]scale=2560:1440,drawtext=`
-        if (useFont) videoFilters += `fontfile=assets/fonts/GT-Sectra-Fine-Medium.ttf:`
+        videoFilters += `fontfile=${fontPath}:`
         videoFilters += `text='${streamer?.value.username.toUpperCase()}'` // username text
 
         audioFilters += `[${filterIndex - 1}:a]asetpts=PTS-STARTPTS[a${i}];`;
 
         if (platformIconEnabled) {
+          // Get platform-specific Y position for icon (relative to main height)
+          const iconYOffset = streamer?.value.platform === 'youtube' ? 46 : 44;
+          
           videoFilters += `:x=224:y=h-th-58:fontsize=60:fontcolor=#e7e7d7[overlay];`; // overlay placement of the username
           videoFilters += `[overlay][scaled_video${i+1}]overlay=x=142:y=0[v${i}];`; // overlay placement of the frame
-          videoFilters += `[v${i}][${filterIndex += 1}:v]overlay=x=142:y=main_h-overlay_h-44[v${i}];`; // overlay placement of the platform icon
+          videoFilters += `[v${i}][${filterIndex += 1}:v]overlay=x=142:y=main_h-overlay_h-${iconYOffset}[v${i}];`; // overlay placement of the platform icon
         } else {
           videoFilters += `:x=142:y=h-th-58:fontsize=60:fontcolor=#e7e7d7[overlay];`; // overlay placement of the username
           videoFilters += `[overlay][scaled_video${i+1}]overlay=x=142:y=0[v${i}];`; // overlay placement of the frame
@@ -291,16 +327,19 @@ class FFmpeg {
       } else if (isClip) {
         // normal clip
         if (platformIconEnabled) {
+          // Get platform-specific Y position for icon
+          const iconY = streamer?.value.platform === 'youtube' ? 17 : 20;
+          
           videoFilters += `[${filterIndex}:v]setpts=PTS-STARTPTS,settb=AVTB,scale=2560:1440:force_original_aspect_ratio=decrease,pad=2560:1440:-1:-1,setsar=1,drawtext=`
-          if (useFont) videoFilters += `fontfile=assets/fonts/GT-Sectra-Fine-Medium.ttf:`
+          videoFilters += `fontfile=${fontPath}:`
           videoFilters += `text='${streamer?.value.username.toUpperCase()}':box=1:boxcolor=black@0.6:boxborderw=5:`; // username text
           videoFilters += `x=120:y=26:fontsize=65:fontcolor=#e7e7d7[v${i}];`; // overlay placement of the username
-          videoFilters += `[v${i}][${filterIndex += 1}:v]overlay=x=30:y=20[v${i}];`; // overlay placement of the platform icon
+          videoFilters += `[v${i}][${filterIndex += 1}:v]overlay=x=30:y=${iconY}[v${i}];`; // overlay placement of the platform icon
           audioFilters += `[${filterIndex - 1}:a]asetpts=PTS-STARTPTS[a${i}];`;
           filterOutputs += `[v${i}][a${i}]`;
         } else {
           videoFilters += `[${filterIndex}:v]setpts=PTS-STARTPTS,settb=AVTB,scale=2560:1440:force_original_aspect_ratio=decrease,pad=2560:1440:-1:-1,setsar=1,drawtext=`
-          if (useFont) videoFilters += `fontfile=assets/fonts/GT-Sectra-Fine-Medium.ttf:`
+          videoFilters += `fontfile=${fontPath}:`
           videoFilters += `text='${streamer?.value.username.toUpperCase()}':box=1:boxcolor=black@0.6:boxborderw=5:`; // username text
           videoFilters += `x=30:y=20:fontsize=65:fontcolor=#e7e7d7[v${i}];`; // overlay placement of the username
           audioFilters += `[${filterIndex}:a]asetpts=PTS-STARTPTS[a${i}];`;

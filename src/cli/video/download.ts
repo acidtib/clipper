@@ -11,7 +11,7 @@ import {
   VLC
 } from "../../deps.ts";
 
-import ProgressBar from "https://deno.land/x/progress@v1.4.9/mod.ts";
+import ProgressBar from "@deno-library/progress";
 
 interface Options {
   debug?: boolean;

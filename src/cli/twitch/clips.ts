@@ -10,12 +10,14 @@ import {
 interface Options {
   debug?: boolean
   merge: boolean
+  limit: number
 }
 
 export default new Command()
   .description("Fetch clips from twitch using list of streamers provided.")
   .arguments("<usernames...>")
   .option("--merge", "Merge links into current list.", { default: false })
+  .option("--limit <value:number>", "Limit the number of clips to fetch.", { default: 2 })
   .action((options: Options, ...args) => {
     const action = new Action(options as unknown as Options, ...args);
     return action.execute();
@@ -27,7 +29,6 @@ class Action {
   usernames
   basePath: string;
   twitch: Twitch
-
   constructor(options: Options, ...args: Array<string>) {
     if (options.debug) {
       logger.warn(`${colors.bold.green("[DEBUG:]")} / options:`, options);
@@ -38,8 +39,14 @@ class Action {
 
     this.usernames = args
     this.basePath = resolve("./")
-    
     this.twitch = new Twitch(Twitch.getClientId(), Twitch.getClientSecret());
+  }
+
+  selectClips(clips: any[]): any[] {
+    if (clips.length === 0) return [];
+    
+    // Return top 2 clips, or all available clips if less than 2
+    return clips.slice(0, Math.min(this.options.limit, clips.length));
   }
 
   async execute() {
@@ -47,7 +54,7 @@ class Action {
     
     const filePath = resolve(this.basePath, "to_download.txt");  
 
-    const hoursAgo = 168; // 7 days
+    const hoursAgo = 192; // 8 days
     const startDate = new Date(Date.now() - hoursAgo * 60 * 60 * 1000).toISOString();
     const endDate = new Date().toISOString();
 
@@ -55,32 +62,38 @@ class Action {
 
     logger.info(`Fetching Twitch clips for ${users.length} streamers. `);
 
-    let newLines = [];
+    let clipsList = [];
 
     for (const user of users) {
       let streamerClips = [];
-      
+
       // get the streamer last 20 clips
       const clips = await this.twitch.client.clips.getClipsForBroadcaster(user.id, {
         limit: 20,
         startDate,
         endDate,
       });
-      
+
       for (const clip of clips.data) {
         // filter out clips that are not from the correct game
         if (clip.gameId !== gameId?.toString()) continue;
-        streamerClips.push(`https://www.twitch.tv/${clip.broadcasterDisplayName}/clip/${clip.id}\n`);
+        streamerClips.push(clip);
       }
 
-      // Add 1-2 random clips with 30% probability of being 2
-      newLines.push(...streamerClips.slice(0, Math.random() < 0.3 ? 2 : 1));
+      // Sort clips by views in descending order (highest views first)
+      streamerClips.sort((a, b) => b.views - a.views);
+      
+      // Select top viewed clips, based on the limit
+      const selectedClips = this.selectClips(streamerClips);
+      clipsList.push(...selectedClips);
     }
 
-    if (newLines.length === 0) {
+    if (clipsList.length === 0) {
       logger.info("No clips found. Exiting.");
       Deno.exit();
     }
+    
+    const newLines = clipsList.map(clip => `v:${clip.views},https://www.twitch.tv/${clip.broadcasterDisplayName}/clip/${clip.id}\n`);
 
     // Read the file content as a string
     const fileContent = await Deno.readTextFile(filePath);
